@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserRound, Users, UsersRound, Users2 } from 'lucide-react'
+import { UserRound, Users, UsersRound, Users2, MapPin, Clock } from 'lucide-react'
 import Map from './components/Map'
 import LibraryList from './components/LibraryList'
 import { useStudySpots } from './hooks/useStudySpots'
@@ -73,6 +73,40 @@ function CrowdLevelIcon({ value, color, size = 28 }) {
   const IconMap = { 1: UserRound, 2: Users, 3: UsersRound, 4: Users2 }
   const Icon = IconMap[value]
   return <Icon {...props} />
+}
+
+/* ─── Image placeholder ─────────────────────────────────────────── */
+function PlaceholderImage({ type }) {
+  const isCafe = type === 'Café'
+  return (
+    <div className={`w-full h-full flex flex-col items-center justify-center gap-2
+      ${isCafe
+        ? 'bg-gradient-to-br from-amber-50 to-amber-100'
+        : 'bg-gradient-to-br from-blue-50 to-indigo-100'
+      }`}
+    >
+      <span className="text-5xl select-none">{isCafe ? '☕' : '📚'}</span>
+      <span className="text-xs font-medium text-gray-400 tracking-wide uppercase">
+        {type ?? 'Lieu'}
+      </span>
+    </div>
+  )
+}
+
+/* ─── Badge de type ──────────────────────────────────────────────── */
+function TypeBadge({ type }) {
+  const isCafe = type === 'Café'
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold
+                      rounded-full px-2.5 py-0.5 border
+      ${isCafe
+        ? 'bg-amber-50 text-amber-700 border-amber-200'
+        : 'bg-blue-50  text-blue-700  border-blue-200'
+      }`}
+    >
+      {isCafe ? '☕' : '📚'} {type ?? 'Lieu'}
+    </span>
+  )
 }
 
 /* ─── Vue : formulaire de signalement ──────────────────────────── */
@@ -277,78 +311,128 @@ function LibrarySheet({ lib, onClose, onReport }) {
 
   /* Vue détail */
   return (
-    <div className="px-5 pt-3 pb-8">
-      {/* Bouton fermeture */}
-      <div className="relative flex justify-center mb-4">
+    <div className="pb-8">
+
+      {/* ── Image hero ──────────────────────────────────────────── */}
+      <div className="relative w-full h-44 overflow-hidden rounded-t-3xl">
+        {lib.imageUrl ? (
+          <img
+            src={lib.imageUrl}
+            alt={lib.name}
+            className="w-full h-full object-cover"
+            onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex' }}
+          />
+        ) : null}
+        {/* Fallback visible si pas d'image ou erreur de chargement */}
+        <div style={{ display: lib.imageUrl ? 'none' : 'flex' }} className="w-full h-full">
+          <PlaceholderImage type={lib.type} />
+        </div>
+
+        {/* Dégradé bas pour lisibilité */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+
+        {/* Poignée drag */}
+        <div className="absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
+          <div className="w-10 h-1 rounded-full bg-white/60" />
+        </div>
+
+        {/* Bouton fermeture */}
         <button
           onClick={onClose}
-          className="absolute right-0 top-1/2 -translate-y-1/2
-                     w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center
-                     text-gray-400 hover:text-gray-600 text-sm"
+          className="absolute top-3 right-3
+                     w-7 h-7 rounded-full bg-black/30 backdrop-blur-sm
+                     flex items-center justify-center text-white text-sm
+                     hover:bg-black/50 transition-colors"
         >
           ✕
         </button>
       </div>
 
-      <h2 className="text-xl font-bold text-gray-900 leading-tight">{lib.name}</h2>
-      <p className="text-sm text-gray-400 mt-1">{lib.address}</p>
+      {/* ── Contenu ─────────────────────────────────────────────── */}
+      <div className="px-5 pt-4">
 
-      {/* Badges fraîcheur + signalement récent */}
-      <div className="flex flex-wrap items-center gap-2 mt-2">
-        {lib.lastUpdated ? (
-          <span className={`inline-flex items-center gap-1 text-xs font-medium rounded-full px-2.5 py-0.5
-            ${isStale(lib.lastUpdated)
-              ? 'text-gray-400 bg-gray-100 border border-gray-200'
-              : 'text-green-700 bg-green-50 border border-green-200'
-            }`}>
-            <span>{isStale(lib.lastUpdated) ? '🕐' : '🟢'}</span>
-            {formatTimeAgo(lib.lastUpdated)}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-400
-                           bg-gray-100 border border-gray-200 rounded-full px-2.5 py-0.5">
-            🕐 Aucun signalement
-          </span>
-        )}
-        {lib.recentReport && !isStale(lib.lastUpdated) && (
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600
-                           bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5">
-            ⚡ Signalement récent
-          </span>
-        )}
+        {/* Badge type + fraîcheur */}
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {lib.type && <TypeBadge type={lib.type} />}
+
+          {lib.lastUpdated ? (
+            <span className={`inline-flex items-center gap-1 text-xs font-medium
+                              rounded-full px-2.5 py-0.5 border
+              ${isStale(lib.lastUpdated)
+                ? 'text-gray-400 bg-gray-100 border-gray-200'
+                : 'text-green-700 bg-green-50 border-green-200'
+              }`}>
+              {isStale(lib.lastUpdated) ? '🕐' : '🟢'} {formatTimeAgo(lib.lastUpdated)}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs font-medium
+                             text-gray-400 bg-gray-100 border border-gray-200
+                             rounded-full px-2.5 py-0.5">
+              🕐 Aucun signalement
+            </span>
+          )}
+
+          {lib.recentReport && !isStale(lib.lastUpdated) && (
+            <span className="inline-flex items-center gap-1 text-xs font-medium
+                             text-amber-600 bg-amber-50 border border-amber-200
+                             rounded-full px-2.5 py-0.5">
+              ⚡ Récent
+            </span>
+          )}
+        </div>
+
+        {/* Nom */}
+        <h2 className="text-xl font-bold text-gray-900 leading-tight">{lib.name}</h2>
+
+        {/* Adresse + horaires */}
+        <div className="mt-2 space-y-1.5">
+          {lib.address && (
+            <div className="flex items-start gap-2 text-sm text-gray-500">
+              <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
+              <span>{lib.address}</span>
+            </div>
+          )}
+          {lib.openingHours && (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Clock size={14} className="shrink-0 text-gray-400" />
+              <span>{lib.openingHours}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Indicateur de remplissage */}
+        <div className="mt-4">
+          <div className="flex justify-between items-baseline mb-1.5">
+            <span className="text-sm font-semibold text-gray-700">
+              {lib.occupancy}% rempli
+            </span>
+            <span className="text-sm font-medium" style={{ color }}>
+              {label}
+            </span>
+          </div>
+          <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+            <div
+              className="h-3 rounded-full transition-all duration-500"
+              style={{ width: `${lib.occupancy}%`, background: color }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-gray-300 mt-1">
+            <span>Vide</span>
+            <span>Complet</span>
+          </div>
+        </div>
+
+        {/* Bouton signalement */}
+        <button
+          onClick={() => setView('report')}
+          className="mt-5 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800
+                     text-white font-semibold text-base rounded-2xl py-4
+                     transition-colors shadow-md shadow-blue-200"
+        >
+          Signaler le niveau de place
+        </button>
+
       </div>
-
-      {/* Indicateur de remplissage */}
-      <div className="mt-5">
-        <div className="flex justify-between items-baseline mb-1.5">
-          <span className="text-sm font-semibold text-gray-700">
-            {lib.occupancy}% rempli
-          </span>
-          <span className="text-sm font-medium" style={{ color }}>
-            {label}
-          </span>
-        </div>
-        <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-          <div
-            className="h-3 rounded-full transition-all duration-500"
-            style={{ width: `${lib.occupancy}%`, background: color }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-gray-300 mt-1">
-          <span>Vide</span>
-          <span>Complet</span>
-        </div>
-      </div>
-
-      {/* Bouton vers le formulaire */}
-      <button
-        onClick={() => setView('report')}
-        className="mt-6 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800
-                   text-white font-semibold text-base rounded-2xl py-4
-                   transition-colors shadow-md shadow-blue-200"
-      >
-        Signaler le niveau de place
-      </button>
     </div>
   )
 }
@@ -482,11 +566,6 @@ export default function App() {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Poignée drag visible */}
-              <div className="flex justify-center pt-3 pb-0 cursor-grab active:cursor-grabbing">
-                <div className="w-10 h-1 rounded-full bg-gray-200" />
-              </div>
-
               <LibrarySheet
                 lib={selectedLib}
                 onClose={() => setSelectedLib(null)}

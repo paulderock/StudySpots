@@ -3,6 +3,10 @@
  *
  * Colonnes attendues dans Airtable :
  *   Name             (Single line text)
+ *   Type             (Single select — ex : "Bibliothèque" | "Café")
+ *   Address          (Single line text)
+ *   OpeningHours     (Single line text — ex : "Lun–Ven 9h–22h")
+ *   Image            (Attachment — 1 fichier image)
  *   Lat              (Number)
  *   Lng              (Number)
  *   CurrentOccupancy (Number, valeur 1–5)
@@ -14,11 +18,8 @@ const TOKEN     = import.meta.env.VITE_AIRTABLE_TOKEN
 const BASE_ID   = import.meta.env.VITE_AIRTABLE_BASE_ID
 const TABLE     = 'StudySpots'
 
-/* Correspondance note 1–5 → pourcentage d'occupation */
 const RATING_TO_OCCUPANCY = { 1: 10, 2: 30, 3: 55, 4: 75, 5: 95 }
-
-/* Un signalement est "récent" s'il date de moins d'1 heure */
-const RECENT_THRESHOLD_MS = 60 * 60 * 1000
+const RECENT_THRESHOLD_MS = 60 * 60 * 1000   // 1 heure
 
 function headers() {
   return {
@@ -28,18 +29,25 @@ function headers() {
 }
 
 /**
- * Convertit un record Airtable brut en objet bibliothèque
- * compatible avec le reste de l'app.
+ * Convertit un record Airtable brut en objet StudySpot.
  */
 function toLibrary(record) {
   const f       = record.fields
   const rating  = Number(f.CurrentOccupancy ?? 1)
   const updated = f.LastUpdated ? new Date(f.LastUpdated) : null
 
+  // Champ Attachment Airtable → tableau d'objets { url, thumbnails, … }
+  const imageUrl = Array.isArray(f.Image) && f.Image.length > 0
+    ? (f.Image[0].thumbnails?.large?.url ?? f.Image[0].url ?? null)
+    : null
+
   return {
-    id:               record.id,          // ex: "recABCDEF123"
-    name:             f.Name      ?? 'Sans nom',
-    address:          f.Address   ?? '',
+    id:               record.id,
+    name:             f.Name         ?? 'Sans nom',
+    type:             f.Type         ?? 'Bibliothèque',
+    address:          f.Address      ?? '',
+    openingHours:     f.OpeningHours ?? '',
+    imageUrl,
     lat:              Number(f.Lat),
     lng:              Number(f.Lng),
     currentOccupancy: rating,
@@ -48,17 +56,12 @@ function toLibrary(record) {
     recentReport:     updated
                         ? Date.now() - updated.getTime() < RECENT_THRESHOLD_MS
                         : false,
-    openToday:        true, // non géré par Airtable pour l'instant
+    openToday:        true,
   }
 }
 
 /* ─── Lecture ────────────────────────────────────────────────────── */
 
-/**
- * Récupère tous les StudySpots.
- * Gère automatiquement la pagination Airtable (offset).
- * @returns {Promise<Library[]>}
- */
 export async function fetchStudySpots() {
   let records = []
   let offset  = null
@@ -87,12 +90,6 @@ export async function fetchStudySpots() {
 
 /* ─── Écriture ───────────────────────────────────────────────────── */
 
-/**
- * Met à jour CurrentOccupancy et LastUpdated d'un StudySpot.
- * @param {string} recordId  — ID Airtable (ex: "recABCDEF123")
- * @param {1|2|3|4|5} rating — nouvelle note
- * @returns {Promise<Library>}
- */
 export async function updateOccupancy(recordId, rating) {
   const res = await fetch(
     `${BASE_URL}/${BASE_ID}/${encodeURIComponent(TABLE)}/${recordId}`,

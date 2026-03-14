@@ -29,7 +29,10 @@ function headers() {
 }
 
 function toLibrary(record) {
-  const f       = record.fields
+  // Normalise les clés : supprime espaces/tabulations accidentels
+  const f = Object.fromEntries(
+    Object.entries(record.fields).map(([k, v]) => [k.trim(), v])
+  )
   const rating  = Number(f.CurrentOccupancy ?? 1)
   const updated = f.LastUpdated ? new Date(f.LastUpdated) : null
 
@@ -39,7 +42,7 @@ function toLibrary(record) {
 
   return {
     id:               record.id,
-    name:             f.Name         ?? 'Sans nom',
+    name:             f.Studyspace ?? f.Name ?? 'Sans nom',
     type:             f.Type         ?? 'Bibliothèque',
     address:          f.Address      ?? '',
     openingTime:      f.OpeningTime  ?? '',

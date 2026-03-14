@@ -395,8 +395,8 @@ export default function App() {
         <Map libraries={libraries} onSelect={handleSelectLib} />
       </div>
 
-      {/* Bannière mode démo (Airtable non configuré) */}
-      {isMock && (
+      {/* Bannière mode démo — uniquement en développement local */}
+      {isMock && import.meta.env.DEV && (
         <div className="absolute top-0 left-0 right-0 z-[1002] bg-amber-400/90
                         backdrop-blur-sm text-amber-900 text-xs font-medium
                         text-center py-1.5 px-4">

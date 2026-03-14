@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Leaflet — hauteur obligatoire */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Glow effect sur les points */
+.dot-glow-green  { filter: drop-shadow(0 0 6px #10b981); }
+.dot-glow-orange { filter: drop-shadow(0 0 6px #f59e0b); }
+.dot-glow-red    { filter: drop-shadow(0 0 6px #ef4444); }
+
+/* Anneau pulsant */
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   stroke-opacity: 0.9; }
+  100% { transform: scale(2.4); stroke-opacity: 0;   }
+}
+.pulse-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+/* Coche de succès */
+@keyframes check-pop {
+  0%   { transform: scale(0) rotate(-10deg); opacity: 0; }
+  65%  { transform: scale(1.25) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg);   opacity: 1; }
+}
+.check-pop {
+  animation: check-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Trait SVG de la coche */
+@keyframes draw-check {
+  from { stroke-dashoffset: 60; }
+  to   { stroke-dashoffset: 0;  }
+}
+.draw-check {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: draw-check 0.35s 0.2s ease-out forwards;
+}

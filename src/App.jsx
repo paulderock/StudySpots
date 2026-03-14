@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { UserRound, Users, UsersRound, Users2 } from 'lucide-react'
 import Map from './components/Map'
 import LibraryList from './components/LibraryList'
@@ -276,10 +277,9 @@ function LibrarySheet({ lib, onClose, onReport }) {
 
   /* Vue détail */
   return (
-    <div className="px-5 pt-2 pb-8">
-      {/* Poignée + fermeture */}
+    <div className="px-5 pt-3 pb-8">
+      {/* Bouton fermeture */}
       <div className="relative flex justify-center mb-4">
-        <div className="w-10 h-1 rounded-full bg-gray-200" />
         <button
           onClick={onClose}
           className="absolute right-0 top-1/2 -translate-y-1/2
@@ -424,35 +424,78 @@ export default function App() {
         </button>
       </nav>
 
-      {/* Panneau liste */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 z-[1000]
-                    bg-white/90 backdrop-blur-md rounded-t-3xl shadow-2xl
-                    max-h-[65vh] overflow-y-auto
-                    transform transition-transform duration-300 ease-out
-                    ${showList && !selectedLib ? 'translate-y-0' : 'translate-y-full'}`}
-      >
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-gray-300" />
-        </div>
-        <LibraryList libraries={libraries} onSelect={handleSelectLib} />
-      </div>
-
-      {/* Bottom sheet — détail + signalement */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 z-[1001]
-                    bg-white rounded-t-3xl shadow-2xl
-                    transform transition-transform duration-300 ease-out
-                    ${selectedLib ? 'translate-y-0' : 'translate-y-full'}`}
-      >
-        {selectedLib && (
-          <LibrarySheet
-            lib={selectedLib}
-            onClose={() => setSelectedLib(null)}
-            onReport={handleReport}
-          />
+      {/* ── Panneau liste ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showList && !selectedLib && (
+          <motion.div
+            key="list-sheet"
+            className="absolute bottom-0 left-0 right-0 z-[1000]
+                       bg-white/90 backdrop-blur-md rounded-t-3xl shadow-2xl
+                       max-h-[65vh] overflow-y-auto"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0, bottom: 0.3 }}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 80) setShowList(false)
+            }}
+          >
+            <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
+            </div>
+            <LibraryList libraries={libraries} onSelect={handleSelectLib} />
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
+
+      {/* ── Bottom sheet détail + signalement ─────────────────────── */}
+      <AnimatePresence>
+        {selectedLib && (
+          <>
+            {/* Fond semi-transparent cliquable */}
+            <motion.div
+              key="backdrop"
+              className="absolute inset-0 z-[1000] bg-black/20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setSelectedLib(null)}
+            />
+
+            <motion.div
+              key="detail-sheet"
+              className="absolute bottom-0 left-0 right-0 z-[1001]
+                         bg-white rounded-t-3xl shadow-2xl"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.3 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 100) setSelectedLib(null)
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Poignée drag visible */}
+              <div className="flex justify-center pt-3 pb-0 cursor-grab active:cursor-grabbing">
+                <div className="w-10 h-1 rounded-full bg-gray-200" />
+              </div>
+
+              <LibrarySheet
+                lib={selectedLib}
+                onClose={() => setSelectedLib(null)}
+                onReport={handleReport}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

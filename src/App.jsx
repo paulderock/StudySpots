@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserRound, Users, UsersRound, Users2, MapPin, Clock } from 'lucide-react'
+import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star } from 'lucide-react'
+import { isLibOpen, formatHours } from './utils/time'
 import Map from './components/Map'
 import LibraryList from './components/LibraryList'
 import { useStudySpots } from './hooks/useStudySpots'
@@ -73,6 +74,24 @@ function CrowdLevelIcon({ value, color, size = 28 }) {
   const IconMap = { 1: UserRound, 2: Users, 3: UsersRound, 4: Users2 }
   const Icon = IconMap[value]
   return <Icon {...props} />
+}
+
+/* ─── Badge ouvert / fermé ───────────────────────────────────────── */
+function OpenBadge({ openingTime, closingTime }) {
+  const open = isLibOpen(openingTime, closingTime)
+  if (open === null) return null
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-bold
+                      rounded-full px-2.5 py-1 backdrop-blur-sm
+      ${open
+        ? 'bg-green-500/90 text-white'
+        : 'bg-red-500/90   text-white'
+      }`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${open ? 'bg-white' : 'bg-white/70'}`} />
+      {open ? 'OUVERT' : 'FERMÉ'}
+    </span>
+  )
 }
 
 /* ─── Image placeholder ─────────────────────────────────────────── */
@@ -310,58 +329,80 @@ function LibrarySheet({ lib, onClose, onReport }) {
   }
 
   /* Vue détail */
+  const open = isLibOpen(lib.openingTime, lib.closingTime)
+  const hours = formatHours(lib.openingTime, lib.closingTime)
+  const canReport = open !== false   // true si ouvert ou horaires inconnus
+
   return (
     <div className="pb-8">
 
-      {/* ── Image hero ──────────────────────────────────────────── */}
-      <div className="relative w-full h-44 overflow-hidden rounded-t-3xl">
+      {/* ── Hero image avec overlays ─────────────────────────────── */}
+      <div className="relative w-full h-52 overflow-hidden rounded-t-3xl">
+
+        {/* Image ou placeholder */}
         {lib.imageUrl ? (
           <img
             src={lib.imageUrl}
             alt={lib.name}
             className="w-full h-full object-cover"
-            onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex' }}
+            onError={(e) => {
+              e.currentTarget.style.display = 'none'
+              e.currentTarget.nextSibling.style.display = 'flex'
+            }}
           />
         ) : null}
-        {/* Fallback visible si pas d'image ou erreur de chargement */}
         <div style={{ display: lib.imageUrl ? 'none' : 'flex' }} className="w-full h-full">
           <PlaceholderImage type={lib.type} />
         </div>
 
-        {/* Dégradé bas pour lisibilité */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+        {/* Dégradé du bas — pour texte lisible */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
 
         {/* Poignée drag */}
         <div className="absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
-          <div className="w-10 h-1 rounded-full bg-white/60" />
+          <div className="w-10 h-1 rounded-full bg-white/50" />
         </div>
 
-        {/* Bouton fermeture */}
+        {/* Badge ouvert/fermé — top left */}
+        <div className="absolute top-3 left-3">
+          <OpenBadge openingTime={lib.openingTime} closingTime={lib.closingTime} />
+        </div>
+
+        {/* Bouton fermeture — top right */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3
-                     w-7 h-7 rounded-full bg-black/30 backdrop-blur-sm
-                     flex items-center justify-center text-white text-sm
-                     hover:bg-black/50 transition-colors"
+          className="absolute top-3 right-3 w-7 h-7 rounded-full
+                     bg-black/30 backdrop-blur-sm flex items-center justify-center
+                     text-white text-sm hover:bg-black/50 transition-colors"
         >
           ✕
         </button>
+
+        {/* Nom + Vibe superposés sur le bas de l'image */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3">
+          {lib.vibe && (
+            <p className="text-white/75 text-xs font-medium mb-0.5 tracking-wide">
+              {lib.vibe}
+            </p>
+          )}
+          <h2 className="text-white text-xl font-bold leading-tight drop-shadow">
+            {lib.name}
+          </h2>
+        </div>
       </div>
 
       {/* ── Contenu ─────────────────────────────────────────────── */}
-      <div className="px-5 pt-4">
+      <div className="px-4 pt-3">
 
-        {/* Badge type + fraîcheur */}
+        {/* Badges : type + fraîcheur signalement */}
         <div className="flex flex-wrap items-center gap-2 mb-3">
           {lib.type && <TypeBadge type={lib.type} />}
-
           {lib.lastUpdated ? (
             <span className={`inline-flex items-center gap-1 text-xs font-medium
                               rounded-full px-2.5 py-0.5 border
               ${isStale(lib.lastUpdated)
                 ? 'text-gray-400 bg-gray-100 border-gray-200'
-                : 'text-green-700 bg-green-50 border-green-200'
-              }`}>
+                : 'text-green-700 bg-green-50 border-green-200'}`}>
               {isStale(lib.lastUpdated) ? '🕐' : '🟢'} {formatTimeAgo(lib.lastUpdated)}
             </span>
           ) : (
@@ -371,7 +412,6 @@ function LibrarySheet({ lib, onClose, onReport }) {
               🕐 Aucun signalement
             </span>
           )}
-
           {lib.recentReport && !isStale(lib.lastUpdated) && (
             <span className="inline-flex items-center gap-1 text-xs font-medium
                              text-amber-600 bg-amber-50 border border-amber-200
@@ -381,34 +421,54 @@ function LibrarySheet({ lib, onClose, onReport }) {
           )}
         </div>
 
-        {/* Nom */}
-        <h2 className="text-xl font-bold text-gray-900 leading-tight">{lib.name}</h2>
+        {/* ── Infos pratiques ─────────────────────────────────── */}
+        <div className="rounded-2xl bg-gray-50 border border-gray-100 divide-y divide-gray-100 mb-4">
 
-        {/* Adresse + horaires */}
-        <div className="mt-2 space-y-1.5">
+          {/* Adresse cliquable → Google Maps */}
           {lib.address && (
-            <div className="flex items-start gap-2 text-sm text-gray-500">
-              <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
-              <span>{lib.address}</span>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lib.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-start gap-3 px-4 py-3 hover:bg-gray-100 transition-colors rounded-t-2xl"
+            >
+              <MapPin size={15} className="mt-0.5 shrink-0 text-blue-500" />
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Adresse</p>
+                <p className="text-sm text-gray-700 leading-snug">{lib.address}</p>
+              </div>
+              <span className="ml-auto text-gray-300 text-xs self-center">↗</span>
+            </a>
+          )}
+
+          {/* Horaires */}
+          {hours && (
+            <div className="flex items-center gap-3 px-4 py-3">
+              <Clock size={15} className="shrink-0 text-blue-500" />
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Horaires</p>
+                <p className="text-sm text-gray-700">{hours}</p>
+              </div>
             </div>
           )}
-          {lib.openingHours && (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Clock size={14} className="shrink-0 text-gray-400" />
-              <span>{lib.openingHours}</span>
+
+          {/* Highlight / points forts */}
+          {lib.highlight && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-b-2xl">
+              <Star size={15} className="mt-0.5 shrink-0 text-amber-400" />
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Points forts</p>
+                <p className="text-sm text-gray-700 leading-snug">{lib.highlight}</p>
+              </div>
             </div>
           )}
         </div>
 
         {/* Indicateur de remplissage */}
-        <div className="mt-4">
+        <div className="mb-5">
           <div className="flex justify-between items-baseline mb-1.5">
-            <span className="text-sm font-semibold text-gray-700">
-              {lib.occupancy}% rempli
-            </span>
-            <span className="text-sm font-medium" style={{ color }}>
-              {label}
-            </span>
+            <span className="text-sm font-semibold text-gray-700">{lib.occupancy}% rempli</span>
+            <span className="text-sm font-medium" style={{ color }}>{label}</span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
             <div
@@ -417,19 +477,21 @@ function LibrarySheet({ lib, onClose, onReport }) {
             />
           </div>
           <div className="flex justify-between text-xs text-gray-300 mt-1">
-            <span>Vide</span>
-            <span>Complet</span>
+            <span>Vide</span><span>Complet</span>
           </div>
         </div>
 
-        {/* Bouton signalement */}
+        {/* Bouton signalement — désactivé si fermé */}
         <button
-          onClick={() => setView('report')}
-          className="mt-5 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800
-                     text-white font-semibold text-base rounded-2xl py-4
-                     transition-colors shadow-md shadow-blue-200"
+          onClick={canReport ? () => setView('report') : undefined}
+          disabled={!canReport}
+          className={`w-full font-semibold text-base rounded-2xl py-4 transition-colors
+            ${canReport
+              ? 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-md shadow-blue-200'
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
         >
-          Signaler le niveau de place
+          {canReport ? 'Signaler le niveau de place' : '🔒 Lieu fermé — pas de signalement'}
         </button>
 
       </div>

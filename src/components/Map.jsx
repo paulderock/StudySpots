@@ -1,6 +1,7 @@
 import { Fragment, useState, useCallback } from 'react'
 import { MapContainer, TileLayer, CircleMarker, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+import { isLibOpen } from '../utils/time'
 
 const AMSTERDAM    = [52.3676, 4.9041]
 const DEFAULT_ZOOM = 13
@@ -114,9 +115,11 @@ export default function Map({ libraries = [], onSelect }) {
         {/* Marqueurs bibliothèques */}
         {libraries.map((lib) => {
           const stale      = isStale(lib.lastUpdated)
-          const color      = stale ? '#9ca3af' : getHeatColor(lib.occupancy ?? 50)
-          const glowClass  = stale ? ''        : getGlowClass(lib.occupancy ?? 50)
-          const dotOpacity = stale ? 0.45 : 1
+          const open       = isLibOpen(lib.openingTime, lib.closingTime)
+          const inactive   = stale || open === false
+          const color      = inactive ? '#9ca3af' : getHeatColor(lib.occupancy ?? 50)
+          const glowClass  = inactive ? ''        : getGlowClass(lib.occupancy ?? 50)
+          const dotOpacity = inactive ? 0.45 : 1
 
           return (
             <Fragment key={lib.id}>
@@ -128,7 +131,7 @@ export default function Map({ libraries = [], onSelect }) {
                   fillOpacity: stale ? 0.07 : 0.15, weight: 0,
                 }}
               />
-              {lib.recentReport && !stale && (
+              {lib.recentReport && !inactive && (
                 <CircleMarker
                   center={[lib.lat, lib.lng]}
                   radius={10}

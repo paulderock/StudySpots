@@ -22,30 +22,48 @@ function isStale(lastUpdated) {
   return Date.now() - new Date(lastUpdated).getTime() > STALE_MS
 }
 
-/* ── Génère un DivIcon "pastille blanche + MapPin coloré" ─────────── */
-function createMarkerIcon(color, isSelected = false) {
-  const size   = isSelected ? 46 : 38
+/* ── Génère un DivIcon "photo circulaire" avec bordure couleur affluence ── */
+function createMarkerIcon({ color, imageUrl, type, isSelected = false }) {
+  const size   = isSelected ? 54 : 44
   const half   = size / 2
-  const border = isSelected ? `2px solid ${color}` : '1.5px solid rgba(0,0,0,0.07)'
+  const border = isSelected ? 4 : 3
   const shadow = isSelected
-    ? `0 4px 18px rgba(0,0,0,0.18), 0 0 0 3px ${color}33`
-    : '0 2px 10px rgba(0,0,0,0.13), 0 1px 3px rgba(0,0,0,0.08)'
+    ? `0 8px 28px rgba(0,0,0,0.30), 0 0 0 2px white, 0 0 0 ${border + 2}px ${color}`
+    : `0 6px 20px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)`
+  const innerSize = size - border * 2 - 2  // photo area inside border + 1px gap
 
-  const iconSize  = isSelected ? 22 : 18
-  // MapPin SVG inline (Lucide shape)
-  const pin = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 10c0 6-8 13-8 13S4 16 4 10a8 8 0 0 1 16 0Z" fill="${color}" stroke="none"/>
-    <circle cx="12" cy="10" r="3" fill="white" stroke="none"/>
-  </svg>`
+  // Fallback gradient si pas d'image
+  const isCafe = (type ?? '').toLowerCase().includes('caf')
+  const fallbackBg = isCafe
+    ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
+    : 'linear-gradient(135deg,#eff6ff,#dbeafe)'
+  const fallbackEmoji = isCafe ? '☕' : '📚'
+
+  const inner = imageUrl
+    ? `<img src="${imageUrl}" style="
+        width:${innerSize}px;height:${innerSize}px;
+        border-radius:50%;object-fit:cover;
+        display:block;
+      " />`
+    : `<div style="
+        width:${innerSize}px;height:${innerSize}px;
+        border-radius:50%;
+        background:${fallbackBg};
+        display:flex;align-items:center;justify-content:center;
+        font-size:${Math.round(innerSize * 0.45)}px;line-height:1;
+      ">${fallbackEmoji}</div>`
 
   const html = `<div style="
     width:${size}px;height:${size}px;
-    background:white;border-radius:50%;
-    border:${border};box-shadow:${shadow};
+    border-radius:50%;
+    border:${border}px solid ${color};
+    box-shadow:${shadow};
     display:flex;align-items:center;justify-content:center;
-    transition:all 0.18s ease;
+    background:white;
     cursor:pointer;
-  ">${pin}</div>`
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    box-sizing:border-box;
+  ">${inner}</div>`
 
   return L.divIcon({
     html,
@@ -168,7 +186,12 @@ export default function Map({ libraries = [], onSelect, focusPoint, selectedLibI
             <Marker
               key={lib.id}
               position={[lib.lat, lib.lng]}
-              icon={createMarkerIcon(color, isSelected)}
+              icon={createMarkerIcon({
+                color,
+                imageUrl: lib.imageUrl,
+                type:     lib.type,
+                isSelected,
+              })}
               eventHandlers={{ click: () => onSelect?.(lib) }}
               zIndexOffset={isSelected ? 1000 : 0}
             />

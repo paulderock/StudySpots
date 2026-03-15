@@ -187,7 +187,11 @@ export default function Map({ libraries = [], onSelect, focusPoint, selectedLibI
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .leaflet-container { background: #f8f8f5; }
+        .leaflet-container { background: #eef1f5; }
+        /* Désaturation sélective des jaunes — atténue les routes orangées/jaunes CartoDB */
+        .leaflet-tile-pane {
+          filter: saturate(0.72) hue-rotate(8deg) brightness(1.04);
+        }
       `}</style>
     </div>
   )

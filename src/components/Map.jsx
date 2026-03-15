@@ -188,11 +188,11 @@ export default function Map({ libraries = [], onSelect, focusPoint, selectedLibI
         zoomControl={false}
         className="w-full h-full"
       >
-        {/* Fond de carte Jawg Streets — eau bleue, parcs verts, routes blanches (sans jaune) */}
+        {/* Fond de carte OpenStreetMap — eau bleue, parcs verts, gratuit sans token */}
         <TileLayer
-          attribution='<a href="https://www.jawg.io" target="_blank">&copy; Jawg Maps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url={`https://tile.jawg.io/jawg-streets/{z}/{x}/{y}{r}.png?access-token=${import.meta.env.VITE_JAWG_TOKEN}`}
-          maxZoom={22}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
         />
 
         <ZoomTracker onZoom={setZoom} />

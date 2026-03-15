@@ -6,8 +6,10 @@ import BottomNav from './components/BottomNav'
 import ExploreTab from './components/tabs/ExploreTab'
 import MapTab from './components/tabs/MapTab'
 import ProfileTab from './components/tabs/ProfileTab'
+import Auth from './components/Auth'
 import { useStudySpots } from './hooks/useStudySpots'
 import { UserProvider, useUser } from './context/UserContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 
 /* ─── Config notation ────────────────────────────────────────────── */
 const RATINGS = [
@@ -492,12 +494,32 @@ function LibrarySheet({ lib, onClose, onReport }) {
   )
 }
 
-/* ─── App root (avec UserProvider) ──────────────────────────────── */
+/* ─── Gate Auth : affiche Auth si pas de session ────────────────── */
+function AuthGate({ children }) {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="absolute inset-0 bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-slate-200 border-t-slate-800 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!user) return <Auth />
+  return children
+}
+
+/* ─── App root ───────────────────────────────────────────────────── */
 export default function App() {
   return (
-    <UserProvider>
-      <AppInner />
-    </UserProvider>
+    <AuthProvider>
+      <UserProvider>
+        <AuthGate>
+          <AppInner />
+        </AuthGate>
+      </UserProvider>
+    </AuthProvider>
   )
 }
 

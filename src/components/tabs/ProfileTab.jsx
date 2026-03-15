@@ -6,6 +6,7 @@ import {
   Info, User,
 } from 'lucide-react'
 import { useUser, getBadge } from '../../context/UserContext'
+import { useAuth } from '../../context/AuthContext'
 
 /* ── Barre de progression ──────────────────────────────────────── */
 function ProgressBar({ score, badge }) {
@@ -96,7 +97,15 @@ function AchievementBadge({ icon: Icon, label, unlocked, color }) {
 /* ── Composant principal ───────────────────────────────────────── */
 export default function ProfileTab() {
   const { user, badge, resetUser } = useUser()
+  const { user: authUser, signOut } = useAuth()
   const [locationShare, setLocationShare] = useState(false)
+
+  // Surcharge email et prénom depuis Supabase si dispo
+  const displayEmail    = authUser?.email ?? user.email
+  const displayName     = authUser?.user_metadata?.first_name ?? user.name
+  const displayFullName = authUser
+    ? (authUser.user_metadata?.first_name ?? authUser.email?.split('@')[0] ?? user.fullName)
+    : user.fullName
 
   /* badges débloqués selon reports */
   const earlyBird  = false              // nécessiterait timestamp horaire
@@ -255,7 +264,7 @@ export default function ProfileTab() {
 
       {/* ── Mon Compte ───────────────────────────────────────────── */}
       <Section title="Mon Compte">
-        <Row icon={User}    label="Email"          value={maskEmail(user.email)} />
+        <Row icon={User}    label="Email"          value={maskEmail(displayEmail)} />
         <Row icon={Clock}   label="Membre depuis"  value={formatDate(user.joinedAt)} />
         <Row icon={Lock}    label="Mot de passe"   />
       </Section>
@@ -282,7 +291,7 @@ export default function ProfileTab() {
       {/* ── Déconnexion ──────────────────────────────────────────── */}
       <div className="px-5 mb-6">
         <button
-          onClick={resetUser}
+          onClick={() => { resetUser(); signOut() }}
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl
                      bg-red-50 text-red-500 font-semibold text-sm
                      border border-red-100 hover:bg-red-100 transition-colors active:scale-[0.98]"

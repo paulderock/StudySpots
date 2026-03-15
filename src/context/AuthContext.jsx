@@ -23,13 +23,14 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function signUp(email, password, firstName) {
+  async function signUp(email, password, firstName, phone) {
     setError(null)
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      phone: phone || undefined,
       options: {
-        data: { first_name: firstName },
+        data: { first_name: firstName, phone },
       },
     })
     if (error) { setError(error.message); return false }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Lock, User, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
+import { Mail, Lock, User, Phone, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 /* ── Champ de saisie épuré style Linear ───────────────────────── */
@@ -63,6 +63,7 @@ export default function Auth() {
   const [email,     setEmail]     = useState('')
   const [password,  setPassword]  = useState('')
   const [firstName, setFirstName] = useState('')
+  const [phone,     setPhone]     = useState('')
 
   function switchMode(m) {
     setMode(m)
@@ -78,7 +79,7 @@ export default function Auth() {
     if (mode === 'login') {
       await signIn(email, password)
     } else {
-      const ok = await signUp(email, password, firstName)
+      const ok = await signUp(email, password, firstName, phone)
       if (ok) setDone(true)
     }
     setLoading(false)
@@ -143,13 +144,23 @@ export default function Auth() {
               className="space-y-3"
             >
               {mode === 'signup' && (
-                <Field
-                  icon={User}
-                  placeholder="Ton prénom"
-                  value={firstName}
-                  onChange={setFirstName}
-                  autoComplete="given-name"
-                />
+                <>
+                  <Field
+                    icon={User}
+                    placeholder="Ton prénom"
+                    value={firstName}
+                    onChange={setFirstName}
+                    autoComplete="given-name"
+                  />
+                  <Field
+                    icon={Phone}
+                    type="tel"
+                    placeholder="Numéro de téléphone"
+                    value={phone}
+                    onChange={setPhone}
+                    autoComplete="tel"
+                  />
+                </>
               )}
               <Field
                 icon={Mail}

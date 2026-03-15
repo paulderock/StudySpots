@@ -149,10 +149,12 @@ export default function Map({ libraries = [], onSelect, focusPoint, selectedLibI
         zoomControl={false}
         className="w-full h-full"
       >
-        {/* Fond de carte ultra-clair style Uber Eats (Stadia Alidade Smooth) */}
+        {/* Fond de carte coloré style Uber Eats — eau bleue, parcs verts (CartoDB Voyager) */}
         <TileLayer
-          attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a>'
-          url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          subdomains="abcd"
+          maxZoom={20}
         />
 
         {/* Marqueurs bibliothèques — pastilles blanches + MapPin coloré */}

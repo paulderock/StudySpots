@@ -34,16 +34,7 @@ export function AuthProvider({ children }) {
       },
     })
     if (error) { setError(error.message); return false }
-
-    // Insère la ligne profil dès la création du compte
-    if (data?.user) {
-      await supabase.from('profiles').insert({
-        id:        data.user.id,
-        full_name: firstName,
-        score:     0,
-        reports:   0,
-      })
-    }
+    // Le profil est créé automatiquement par le trigger handle_new_user() côté Supabase
     return true
   }
 

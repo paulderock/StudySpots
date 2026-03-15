@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Sparkles, Circle, VolumeX, Coffee, Plug, User, ChevronRight } from 'lucide-react'
+import { Sparkles, Circle, VolumeX, Coffee, BookOpen, User, ChevronRight } from 'lucide-react'
 import { isLibOpen } from '../../utils/time'
 import { useUser } from '../../context/UserContext'
 
@@ -9,7 +9,7 @@ const FILTERS = [
   { id: 'open',   label: 'Ouvert',      Icon: () => <Circle   size={8}  fill="#22c55e" stroke="none" /> },
   { id: 'quiet',  label: 'Calme',       Icon: () => <VolumeX  size={13} strokeWidth={2} /> },
   { id: 'cafe',   label: 'Café',        Icon: () => <Coffee   size={13} strokeWidth={2} /> },
-  { id: 'socket', label: 'Prises dispo',Icon: () => <Plug     size={13} strokeWidth={2} /> },
+  { id: 'library', label: 'Librairie',  Icon: () => <BookOpen size={13} strokeWidth={2} /> },
 ]
 
 /* ── Couleurs sémantiques par niveau ───────────────────────────── */
@@ -208,9 +208,9 @@ export default function ExploreTab({ libraries, onSelect }) {
         return (lib.vibe ?? '').toLowerCase().includes('silence') || (lib.occupancy ?? 50) < 35
       if (activeFilter === 'cafe')
         return lib.type === 'Café'
-      if (activeFilter === 'socket')
-        return (lib.highlight ?? '').toLowerCase().includes('prise') ||
-               (lib.vibe ?? '').toLowerCase().includes('prise')
+      if (activeFilter === 'library')
+        return (lib.type ?? '').toLowerCase().includes('librar') ||
+               (lib.type ?? '').toLowerCase().includes('biblioth')
       return true
     })
   }, [libraries, activeFilter])
@@ -226,7 +226,7 @@ export default function ExploreTab({ libraries, onSelect }) {
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="px-5 pt-16 pb-5">
         <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tighter leading-tight">
-          Salut,&nbsp;<span className="text-blue-500">{user.name}</span>&nbsp;!
+          Salut, {user.name}&nbsp;!
         </h1>
       </div>
 

@@ -94,9 +94,10 @@ function LibCard({ lib, onSelect }) {
 
 /* ── Composant principal ──────────────────────────────────────── */
 export default function MapTab({ libraries, onSelect, showBanner }) {
-  const [query,      setQuery]      = useState('')
-  const [isOpen,     setIsOpen]     = useState(false)
-  const [focusPoint, setFocusPoint] = useState(null)
+  const [query,          setQuery]          = useState('')
+  const [isOpen,         setIsOpen]         = useState(false)
+  const [focusPoint,     setFocusPoint]     = useState(null)
+  const [selectedLibId,  setSelectedLibId]  = useState(null)
 
   const topOffset = showBanner ? 'top-10' : 'top-4'
 
@@ -113,11 +114,15 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
 
   /* Clic sur une carte de la liste */
   function handleCardClick(lib) {
-    // Fly to the marker on the map
     setFocusPoint({ lat: lib.lat, lng: lib.lng, _t: Date.now() })
-    // Close the peek sheet
+    setSelectedLibId(lib.id)
     setIsOpen(false)
-    // Open the detail sheet (via App.jsx)
+    onSelect(lib)
+  }
+
+  /* Clic direct sur un marqueur */
+  function handleMarkerClick(lib) {
+    setSelectedLibId(lib.id)
     onSelect(lib)
   }
 
@@ -125,7 +130,12 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
     <div className="absolute inset-0">
 
       {/* ── Carte plein écran ────────────────────────────────────── */}
-      <Map libraries={filtered} onSelect={onSelect} focusPoint={focusPoint} />
+      <Map
+        libraries={filtered}
+        onSelect={handleMarkerClick}
+        focusPoint={focusPoint}
+        selectedLibId={selectedLibId}
+      />
 
       {/* ── Barre de recherche flottante ────────────────────────── */}
       <div className={`absolute ${topOffset} left-4 right-4 z-[600]`}>

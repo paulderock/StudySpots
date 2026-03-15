@@ -149,12 +149,11 @@ export default function Map({ libraries = [], onSelect, focusPoint, selectedLibI
         zoomControl={false}
         className="w-full h-full"
       >
-        {/* Fond de carte coloré style Uber Eats — eau bleue, parcs verts (CartoDB Voyager) */}
+        {/* Fond de carte Jawg Streets — eau bleue, parcs verts, routes blanches (sans jaune) */}
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-          maxZoom={20}
+          attribution='<a href="https://www.jawg.io" target="_blank">&copy; Jawg Maps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url={`https://tile.jawg.io/jawg-streets/{z}/{x}/{y}{r}.png?access-token=${import.meta.env.VITE_JAWG_TOKEN}`}
+          maxZoom={22}
         />
 
         {/* Marqueurs bibliothèques — pastilles blanches + MapPin coloré */}
@@ -187,11 +186,7 @@ export default function Map({ libraries = [], onSelect, focusPoint, selectedLibI
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .leaflet-container { background: #eef1f5; }
-        /* Désaturation sélective des jaunes — atténue les routes orangées/jaunes CartoDB */
-        .leaflet-tile-pane {
-          filter: saturate(0.72) hue-rotate(8deg) brightness(1.04);
-        }
+        .leaflet-container { background: #f0f4f8; }
       `}</style>
     </div>
   )

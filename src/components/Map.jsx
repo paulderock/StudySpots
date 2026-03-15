@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { isLibOpen } from '../utils/time'
@@ -22,17 +22,16 @@ function isStale(lastUpdated) {
   return Date.now() - new Date(lastUpdated).getTime() > STALE_MS
 }
 
-/* ── Génère un DivIcon "photo circulaire" avec bordure couleur affluence ── */
-function createMarkerIcon({ color, imageUrl, type, isSelected = false }) {
-  const size   = 34   // taille fixe — pas de grossissement au clic
-  const half   = size / 2
-  const border = isSelected ? 3 : 2
-  const shadow = isSelected
+/* ── Génère un DivIcon "photo circulaire" avec label flottant ────── */
+function createMarkerIcon({ color, imageUrl, type, name = '', isSelected = false, showLabel = false }) {
+  const size      = 34
+  const half      = size / 2
+  const border    = isSelected ? 3 : 2
+  const shadow    = isSelected
     ? `0 4px 14px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.12)`
     : `0 3px 10px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)`
-  const innerSize = size - border * 2 - 2  // photo area inside border + 1px gap
+  const innerSize = size - border * 2 - 2
 
-  // Fallback gradient si pas d'image
   const isCafe = (type ?? '').toLowerCase().includes('caf')
   const fallbackBg = isCafe
     ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
@@ -40,30 +39,44 @@ function createMarkerIcon({ color, imageUrl, type, isSelected = false }) {
   const fallbackEmoji = isCafe ? '☕' : '📚'
 
   const inner = imageUrl
-    ? `<img src="${imageUrl}" style="
-        width:${innerSize}px;height:${innerSize}px;
-        border-radius:50%;object-fit:cover;
-        display:block;
-      " />`
-    : `<div style="
-        width:${innerSize}px;height:${innerSize}px;
-        border-radius:50%;
-        background:${fallbackBg};
-        display:flex;align-items:center;justify-content:center;
-        font-size:${Math.round(innerSize * 0.45)}px;line-height:1;
-      ">${fallbackEmoji}</div>`
+    ? `<img src="${imageUrl}" style="width:${innerSize}px;height:${innerSize}px;border-radius:50%;object-fit:cover;display:block;" />`
+    : `<div style="width:${innerSize}px;height:${innerSize}px;border-radius:50%;background:${fallbackBg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(innerSize * 0.45)}px;line-height:1;">${fallbackEmoji}</div>`
 
-  const html = `<div style="
-    width:${size}px;height:${size}px;
-    border-radius:50%;
-    border:${border}px solid ${color};
-    box-shadow:${shadow};
-    display:flex;align-items:center;justify-content:center;
-    background:white;
-    cursor:pointer;
-    transition:transform 0.15s ease, box-shadow 0.15s ease;
-    box-sizing:border-box;
-  ">${inner}</div>`
+  // Label flottant (visible uniquement si showLabel)
+  const labelHtml = showLabel
+    ? `<div style="
+        position:absolute;
+        top:${size + 5}px;
+        left:50%;
+        transform:translateX(-50%);
+        background:rgba(255,255,255,0.93);
+        backdrop-filter:blur(6px);
+        -webkit-backdrop-filter:blur(6px);
+        border-radius:999px;
+        padding:2px 7px;
+        font-size:10px;
+        font-weight:700;
+        color:#1e293b;
+        white-space:nowrap;
+        box-shadow:0 1px 6px rgba(0,0,0,0.10);
+        animation:labelPop 0.22s cubic-bezier(0.34,1.56,0.64,1);
+        pointer-events:none;
+      ">${name}</div>`
+    : ''
+
+  const html = `
+    <div style="position:relative;width:${size}px;height:${size}px;overflow:visible;cursor:pointer;">
+      <div style="
+        width:${size}px;height:${size}px;
+        border-radius:50%;
+        border:${border}px solid ${color};
+        box-shadow:${shadow};
+        display:flex;align-items:center;justify-content:center;
+        background:white;
+        box-sizing:border-box;
+      ">${inner}</div>
+      ${labelHtml}
+    </div>`
 
   return L.divIcon({
     html,
@@ -71,6 +84,12 @@ function createMarkerIcon({ color, imageUrl, type, isSelected = false }) {
     iconAnchor: [half, half],
     className:  '',
   })
+}
+
+/* ── Traque le niveau de zoom ────────────────────────────────────── */
+function ZoomTracker({ onZoom }) {
+  useMapEvents({ zoomend: (e) => onZoom(e.target.getZoom()) })
+  return null
 }
 
 /* ── Icône position utilisateur (point bleu pulsant) ─────────────── */
@@ -156,7 +175,9 @@ function LocateControl({ onLocated }) {
 
 /* ── Composant principal ─────────────────────────────────────────── */
 export default function Map({ libraries = [], onSelect, focusPoint, selectedLibId }) {
-  const [userPos, setUserPos] = useState(null)
+  const [userPos,    setUserPos]    = useState(null)
+  const [zoom,       setZoom]       = useState(DEFAULT_ZOOM)
+  const showLabels = zoom >= 14  // labels visibles à partir du zoom 14
 
   return (
     <div className="w-full h-full" style={{ position: 'relative' }}>
@@ -174,7 +195,9 @@ export default function Map({ libraries = [], onSelect, focusPoint, selectedLibI
           maxZoom={22}
         />
 
-        {/* Marqueurs bibliothèques — pastilles blanches + MapPin coloré */}
+        <ZoomTracker onZoom={setZoom} />
+
+        {/* Marqueurs bibliothèques — photo circulaire + label flottant */}
         {libraries.map((lib) => {
           const stale      = isStale(lib.lastUpdated)
           const open       = isLibOpen(lib.openingTime, lib.closingTime)
@@ -188,9 +211,11 @@ export default function Map({ libraries = [], onSelect, focusPoint, selectedLibI
               position={[lib.lat, lib.lng]}
               icon={createMarkerIcon({
                 color,
-                imageUrl: lib.imageUrl,
-                type:     lib.type,
+                imageUrl:  lib.imageUrl,
+                type:      lib.type,
+                name:      lib.name,
                 isSelected,
+                showLabel: showLabels,
               })}
               eventHandlers={{ click: () => onSelect?.(lib) }}
               zIndexOffset={isSelected ? 1000 : 0}
@@ -209,7 +234,13 @@ export default function Map({ libraries = [], onSelect, focusPoint, selectedLibI
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes labelPop {
+          0%   { opacity: 0; transform: translateX(-50%) scale(0.7); }
+          60%  { transform: translateX(-50%) scale(1.05); }
+          100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        }
         .leaflet-container { background: #f0f4f8; }
+        .leaflet-marker-icon { overflow: visible !important; }
       `}</style>
     </div>
   )

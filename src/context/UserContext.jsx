@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 const UserContext = createContext(null)
@@ -30,15 +30,23 @@ export function UserProvider({ children }) {
     } catch { return DEFAULT_USER }
   })
 
-  // Charge le score réel depuis Supabase au démarrage
+  // Ref pour userId — accessible sans stale closure dans addScore
+  const userIdRef = useRef(null)
+  const channelRef = useRef(null)
+
   useEffect(() => {
     if (!supabase) return
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) return
+      const uid = session.user.id
+      userIdRef.current = uid
+
+      // 1. Charge le profil initial
       const { data } = await supabase
         .from('profiles')
         .select('full_name, score, reports')
-        .eq('id', session.user.id)
+        .eq('id', uid)
         .single()
       if (data) {
         setUser(prev => ({
@@ -48,7 +56,27 @@ export function UserProvider({ children }) {
           reports:  data.reports ?? prev.reports,
         }))
       }
+
+      // 2. Abonnement Realtime — score live sans rechargement
+      channelRef.current = supabase
+        .channel(`profile:${uid}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${uid}` },
+          (payload) => {
+            setUser(prev => ({
+              ...prev,
+              score:   payload.new.score   ?? prev.score,
+              reports: payload.new.reports ?? prev.reports,
+            }))
+          }
+        )
+        .subscribe()
     })
+
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current)
+    }
   }, [])
 
   async function addScore(points = 50, spotName = '') {
@@ -58,7 +86,7 @@ export function UserProvider({ children }) {
       at: new Date().toISOString(),
     }
 
-    // Mise à jour locale immédiate
+    // Mise à jour locale immédiate pour le feedback UI
     setUser(prev => {
       const next = {
         ...prev,
@@ -70,24 +98,23 @@ export function UserProvider({ children }) {
       return next
     })
 
-    // Sync Supabase
-    if (supabase) {
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      if (authUser) {
-        const { data: profile } = await supabase
+    // Sync Supabase (le Realtime renverra la valeur officielle)
+    const uid = userIdRef.current
+    if (supabase && uid) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('score, reports')
+        .eq('id', uid)
+        .single()
+      if (profile) {
+        await supabase
           .from('profiles')
-          .select('score, reports')
-          .eq('id', authUser.id)
-          .single()
-        if (profile) {
-          await supabase
-            .from('profiles')
-            .update({
-              score:   (profile.score   ?? 0) + points,
-              reports: (profile.reports ?? 0) + 1,
-            })
-            .eq('id', authUser.id)
-        }
+          .update({
+            score:   (profile.score   ?? 0) + points,
+            reports: (profile.reports ?? 0) + 1,
+          })
+          .eq('id', uid)
+        // Le channel Realtime reçoit l'UPDATE et synchronise l'UI automatiquement
       }
     }
   }
@@ -95,6 +122,8 @@ export function UserProvider({ children }) {
   function resetUser() {
     localStorage.removeItem('studyspot_user')
     setUser(DEFAULT_USER)
+    userIdRef.current = null
+    if (channelRef.current) supabase?.removeChannel(channelRef.current)
   }
 
   return (

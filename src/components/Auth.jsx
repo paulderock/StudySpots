@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, Lock, User, Phone, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 
 /* ── Champ de saisie épuré style Linear ───────────────────────── */
 function Field({ icon: Icon, type = 'text', placeholder, value, onChange, autoComplete }) {
@@ -45,9 +46,7 @@ function Logo() {
       <h1 className="text-[22px] font-extrabold tracking-tighter text-slate-900 leading-tight">
         Study<span className="text-blue-500">Spot</span> AMS
       </h1>
-      <p className="text-xs text-slate-400 mt-1 font-medium">
-        La carte des spots d'étude à Amsterdam
-      </p>
+      <p className="text-xs text-slate-400 mt-1 font-medium">{t('tagline')}</p>
     </div>
   )
 }
@@ -55,6 +54,7 @@ function Logo() {
 /* ── Composant principal ──────────────────────────────────────── */
 export default function Auth() {
   const { signIn, signUp, error, setError } = useAuth()
+  const { t } = useLanguage()
 
   const [mode,      setMode]      = useState('login')   // 'login' | 'signup'
   const [loading,   setLoading]   = useState(false)
@@ -105,7 +105,7 @@ export default function Auth() {
                 boxShadow: '0 1px 4px rgba(0,0,0,0.10)',
               } : { color: '#94a3b8' }}
             >
-              {m === 'login' ? 'Connexion' : 'Inscription'}
+              {m === 'login' ? t('loginTab') : t('signupTab')}
             </button>
           ))}
         </div>
@@ -120,16 +120,16 @@ export default function Auth() {
               className="text-center py-6"
             >
               <CheckCircle2 size={40} className="text-emerald-500 mx-auto mb-3" strokeWidth={1.5} />
-              <p className="font-semibold text-slate-800 text-sm">Vérifie tes emails !</p>
+              <p className="font-semibold text-slate-800 text-sm">{t('checkEmail')}</p>
               <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Un lien de confirmation a été envoyé à<br />
+                {t('confirmSent')}<br />
                 <span className="font-medium text-slate-600">{email}</span>
               </p>
               <button
                 onClick={() => { setDone(false); switchMode('login') }}
                 className="mt-5 text-xs text-blue-500 font-medium underline underline-offset-2"
               >
-                Retour à la connexion
+                {t('backToLogin')}
               </button>
             </motion.div>
           ) : (
@@ -145,39 +145,12 @@ export default function Auth() {
             >
               {mode === 'signup' && (
                 <>
-                  <Field
-                    icon={User}
-                    placeholder="Ton prénom"
-                    value={firstName}
-                    onChange={setFirstName}
-                    autoComplete="given-name"
-                  />
-                  <Field
-                    icon={Phone}
-                    type="tel"
-                    placeholder="Numéro de téléphone"
-                    value={phone}
-                    onChange={setPhone}
-                    autoComplete="tel"
-                  />
+                  <Field icon={User} placeholder={t('firstNamePh')} value={firstName} onChange={setFirstName} autoComplete="given-name" />
+                  <Field icon={Phone} type="tel" placeholder={t('phonePh')} value={phone} onChange={setPhone} autoComplete="tel" />
                 </>
               )}
-              <Field
-                icon={Mail}
-                type="email"
-                placeholder="Adresse email"
-                value={email}
-                onChange={setEmail}
-                autoComplete="email"
-              />
-              <Field
-                icon={Lock}
-                type="password"
-                placeholder="Mot de passe"
-                value={password}
-                onChange={setPassword}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              />
+              <Field icon={Mail} type="email" placeholder={t('emailPh')} value={email} onChange={setEmail} autoComplete="email" />
+              <Field icon={Lock} type="password" placeholder={t('passwordPh')} value={password} onChange={setPassword} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
 
               {/* Erreur */}
               {error && (
@@ -200,7 +173,7 @@ export default function Auth() {
                 {loading
                   ? <Loader2 size={16} className="animate-spin" />
                   : <>
-                      {mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
+                      {mode === 'login' ? t('loginBtn') : t('signupBtn')}
                       <ArrowRight size={15} strokeWidth={2} />
                     </>
                 }
@@ -210,9 +183,7 @@ export default function Auth() {
         </AnimatePresence>
 
         {/* Footer discret */}
-        <p className="text-center text-[10px] text-slate-300 mt-8">
-          StudySpot AMS · Amsterdam · 2025
-        </p>
+        <p className="text-center text-[10px] text-slate-300 mt-8">{t('authFooter')}</p>
       </div>
     </div>
   )

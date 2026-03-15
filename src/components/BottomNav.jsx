@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useLanguage } from '../context/LanguageContext'
 
 function IconExplore({ active }) {
   return (
@@ -35,15 +36,16 @@ function IconProfile({ active }) {
 }
 
 const TABS = [
-  { id: 'explore', label: 'Explorer', Icon: IconExplore },
-  { id: 'map',     label: 'Carte',    Icon: IconMap     },
-  { id: 'profile', label: 'Profil',   Icon: IconProfile },
+  { id: 'explore', key: 'navExplore', Icon: IconExplore },
+  { id: 'map',     key: 'navMap',     Icon: IconMap     },
+  { id: 'profile', key: 'navProfile', Icon: IconProfile },
 ]
 
 export default function BottomNav({ active, onChange }) {
+  const { t } = useLanguage()
   return (
     <div className="absolute bottom-8 left-0 right-0 z-[1000] flex items-center justify-center gap-6">
-      {TABS.map(({ id, Icon }) => {
+      {TABS.map(({ id, key, Icon }) => {
         const isActive = active === id
         return (
           <motion.button

@@ -10,14 +10,15 @@ import Auth from './components/Auth'
 import { useStudySpots } from './hooks/useStudySpots'
 import { UserProvider, useUser } from './context/UserContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { LanguageProvider, useLanguage } from './context/LanguageContext'
 
-/* ─── Config notation ────────────────────────────────────────────── */
-const RATINGS = [
-  { value: 1, label: 'Vide',        color: '#10b981', pastel: '#d1fae5', glow: '#10b98140' },
-  { value: 2, label: 'Calme',       color: '#34d399', pastel: '#d1fae5', glow: '#34d39940' },
-  { value: 3, label: 'Modéré',      color: '#f59e0b', pastel: '#fef3c7', glow: '#f59e0b40' },
-  { value: 4, label: 'Très occupé', color: '#f97316', pastel: '#ffedd5', glow: '#f9731640' },
-  { value: 5, label: 'Complet',     color: '#ef4444', pastel: '#fee2e2', glow: '#ef444440' },
+/* ─── Config notation (labels injectés via t() au moment du rendu) ── */
+const RATINGS_BASE = [
+  { value: 1, key: 'rating1', color: '#10b981', pastel: '#d1fae5', glow: '#10b98140' },
+  { value: 2, key: 'rating2', color: '#34d399', pastel: '#d1fae5', glow: '#34d39940' },
+  { value: 3, key: 'rating3', color: '#f59e0b', pastel: '#fef3c7', glow: '#f59e0b40' },
+  { value: 4, key: 'rating4', color: '#f97316', pastel: '#ffedd5', glow: '#f9731640' },
+  { value: 5, key: 'rating5', color: '#ef4444', pastel: '#fee2e2', glow: '#ef444440' },
 ]
 
 /* ─── Helpers ────────────────────────────────────────────────────── */
@@ -26,26 +27,26 @@ function getHeatColor(occupancy) {
   if (occupancy >= 40) return '#f59e0b'
   return '#10b981'
 }
-function getOccupancyLabel(occupancy) {
-  if (occupancy >= 80) return 'Très chargé'
-  if (occupancy >= 60) return 'Animé'
-  if (occupancy >= 30) return 'Calme'
-  return 'Très calme'
+function getOccupancyLabel(occupancy, t) {
+  if (occupancy >= 80) return t('occupancyVeryBusy')
+  if (occupancy >= 60) return t('occupancyBusy')
+  if (occupancy >= 30) return t('occupancyCalm')
+  return t('occupancyVeryCalm')
 }
 const STALE_MS = 5 * 60 * 60 * 1000
 function isStale(lastUpdated) {
   if (!lastUpdated) return true
   return Date.now() - new Date(lastUpdated).getTime() > STALE_MS
 }
-function formatTimeAgo(lastUpdated) {
+function formatTimeAgo(lastUpdated, t) {
   if (!lastUpdated) return null
   const diffMs  = Date.now() - new Date(lastUpdated).getTime()
   const diffMin = Math.floor(diffMs / 60_000)
-  if (diffMin < 1)  return "À l'instant"
-  if (diffMin < 60) return `Il y a ${diffMin} min`
+  if (diffMin < 1)  return t('justNow')
+  if (diffMin < 60) return t('minutesAgo', diffMin)
   const diffH = Math.floor(diffMin / 60)
-  if (diffH < 24)   return `Il y a ${diffH}h`
-  return `Il y a ${Math.floor(diffH / 24)}j`
+  if (diffH < 24)   return t('hoursAgo', diffH)
+  return t('daysAgo', Math.floor(diffH / 24))
 }
 
 /* ─── Icônes densité ─────────────────────────────────────────────── */
@@ -115,6 +116,8 @@ function TypeBadge({ type }) {
 
 /* ─── Vue : signalement ──────────────────────────────────────────── */
 function ReportView({ lib, onConfirm, onBack }) {
+  const { t } = useLanguage()
+  const RATINGS = RATINGS_BASE.map(r => ({ ...r, label: t(r.key) }))
   const [rating,      setRating]      = useState(null)
   const [submitting,  setSubmitting]  = useState(false)
   const [submitError, setSubmitError] = useState(null)
@@ -127,7 +130,7 @@ function ReportView({ lib, onConfirm, onBack }) {
     try {
       await onConfirm(rating)
     } catch {
-      setSubmitError('Connexion impossible. Vérifie ta connexion et réessaie.')
+      setSubmitError(t('reportError'))
       setSubmitting(false)
     }
   }
@@ -148,7 +151,7 @@ function ReportView({ lib, onConfirm, onBack }) {
           <h2 className="font-bold text-slate-900 text-base leading-tight tracking-tight">
             {lib.name}
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">Signaler le niveau de fréquentation</p>
+          <p className="text-xs text-slate-400 mt-0.5">{t('reportTitle')}</p>
         </div>
       </div>
 
@@ -199,7 +202,7 @@ function ReportView({ lib, onConfirm, onBack }) {
             {selected.value}/5 — {selected.label}
           </span>
         ) : (
-          <span className="text-sm text-slate-400">Sélectionne un niveau ci-dessus</span>
+          <span className="text-sm text-slate-400">{t('reportSelect')}</span>
         )}
       </div>
 
@@ -231,20 +234,19 @@ function ReportView({ lib, onConfirm, onBack }) {
         {submitting ? (
           <>
             <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-            Envoi en cours…
+            {t('reporting')}
           </>
-        ) : 'Confirmer le signalement'}
+        ) : t('reportConfirm')}
       </button>
 
-      <p className="text-center text-xs text-slate-400 mt-4 leading-relaxed">
-        Ton signalement aide la communauté étudiante d'Amsterdam.
-      </p>
+      <p className="text-center text-xs text-slate-400 mt-4 leading-relaxed">{t('reportHelp')}</p>
     </div>
   )
 }
 
 /* ─── Vue : succès ───────────────────────────────────────────────── */
 function SuccessView({ onClose }) {
+  const { t } = useLanguage()
   return (
     <div className="px-5 pt-6 pb-10 flex flex-col items-center text-center">
       <div className="check-pop w-20 h-20 rounded-full bg-emerald-50 flex items-center
@@ -254,16 +256,14 @@ function SuccessView({ onClose }) {
                 stroke="#10b981" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
-      <h2 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">
-        Merci pour ton aide !
-      </h2>
-      <p className="text-sm text-slate-500 mb-1">Ton signalement a été pris en compte.</p>
-      <p className="text-xs text-slate-400 mb-2">La carte a été mise à jour en temps réel.</p>
-      <p className="text-xs font-bold text-indigo-500 mb-8">+50 pts ajoutés à ton score ✨</p>
+      <h2 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">{t('successTitle')}</h2>
+      <p className="text-sm text-slate-500 mb-1">{t('successBody')}</p>
+      <p className="text-xs text-slate-400 mb-2">{t('successRT')}</p>
+      <p className="text-xs font-bold text-indigo-500 mb-8">{t('successPts')}</p>
       <button onClick={onClose}
         className="px-8 py-3 rounded-2xl bg-slate-900 text-white
                    font-semibold text-sm hover:bg-slate-700 transition-colors">
-        Retour à la carte
+        {t('backToMap')}
       </button>
     </div>
   )
@@ -271,17 +271,11 @@ function SuccessView({ onClose }) {
 
 /* ─── Bouton signalement — design pro ────────────────────────────── */
 function ReportButton({ onPress }) {
+  const { t } = useLanguage()
   return (
     <div className="flex flex-col items-center gap-2.5 w-full">
-      {/* Étiquette technique */}
-      <p style={{
-        fontSize: '10px',
-        fontWeight: 700,
-        letterSpacing: '0.12em',
-        textTransform: 'uppercase',
-        color: '#94a3b8',
-      }}>
-        +50 pts · Signalement en direct
+      <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#94a3b8' }}>
+        {t('reportBtnLabel')}
       </p>
 
       {/* Bouton */}
@@ -317,7 +311,7 @@ function ReportButton({ onPress }) {
             display: 'inline-block',
           }}
         />
-        Signaler l'état actuel
+        {t('reportBtnText')}
       </motion.button>
     </div>
   )
@@ -325,11 +319,12 @@ function ReportButton({ onPress }) {
 
 /* ─── Panneau détail bibliothèque ────────────────────────────────── */
 function LibrarySheet({ lib, onClose, onReport }) {
+  const { t } = useLanguage()
   const [view, setView] = useState('detail')
   useEffect(() => { setView('detail') }, [lib?.id])
 
   const color    = getHeatColor(lib.occupancy)
-  const label    = getOccupancyLabel(lib.occupancy)
+  const label    = getOccupancyLabel(lib.occupancy, t)
   const open     = isLibOpen(lib.openingTime, lib.closingTime)
   const hours    = formatHours(lib.openingTime, lib.closingTime)
   const canReport = open !== false
@@ -414,13 +409,13 @@ function LibrarySheet({ lib, onClose, onReport }) {
               {isStale(lib.lastUpdated)
                 ? <Clock size={11} strokeWidth={2} />
                 : <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
-              {formatTimeAgo(lib.lastUpdated)}
+              {formatTimeAgo(lib.lastUpdated, t)}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-xs font-medium
                              text-slate-400 bg-slate-50 border border-slate-200
                              rounded-full px-2.5 py-0.5">
-              <Clock size={11} strokeWidth={2} /> Aucun signalement
+              <Clock size={11} strokeWidth={2} /> {t('noReport')}
             </span>
           )}
         </div>
@@ -435,7 +430,7 @@ function LibrarySheet({ lib, onClose, onReport }) {
                className="flex items-start gap-3 px-4 py-3 hover:bg-slate-100/60 transition-colors">
               <MapPin size={14} className="mt-0.5 shrink-0 text-blue-500" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Adresse</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">{t('address')}</p>
                 <p className="text-sm text-slate-700 leading-snug">{lib.address}</p>
               </div>
               <span className="text-slate-300 text-xs self-center shrink-0">↗</span>
@@ -446,7 +441,7 @@ function LibrarySheet({ lib, onClose, onReport }) {
             <div className="flex items-center gap-3 px-4 py-3">
               <Clock size={14} className="shrink-0 text-blue-500" />
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Horaires</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">{t('hours')}</p>
                 <p className="text-sm text-slate-700">{hours}</p>
               </div>
             </div>
@@ -456,7 +451,7 @@ function LibrarySheet({ lib, onClose, onReport }) {
             <div className="flex items-start gap-3 px-4 py-3">
               <Star size={14} className="mt-0.5 shrink-0 text-amber-400" />
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Points forts</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">{t('highlights')}</p>
                 <p className="text-sm text-slate-700 leading-snug">{lib.highlight}</p>
               </div>
             </div>
@@ -466,7 +461,7 @@ function LibrarySheet({ lib, onClose, onReport }) {
         {/* Barre d'occupation */}
         <div className="mb-5">
           <div className="flex justify-between items-baseline mb-1.5">
-            <span className="text-sm font-semibold text-slate-700">{lib.occupancy}% rempli</span>
+            <span className="text-sm font-semibold text-slate-700">{t('percentFull', lib.occupancy)}</span>
             <span className="text-sm font-semibold" style={{ color }}>{label}</span>
           </div>
           <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
@@ -474,7 +469,7 @@ function LibrarySheet({ lib, onClose, onReport }) {
                  style={{ width: `${lib.occupancy}%`, background: color }} />
           </div>
           <div className="flex justify-between text-xs text-slate-300 mt-1">
-            <span>Vide</span><span>Complet</span>
+            <span>{t('empty')}</span><span>{t('full')}</span>
           </div>
         </div>
 
@@ -485,7 +480,7 @@ function LibrarySheet({ lib, onClose, onReport }) {
           <div className="w-full flex items-center justify-center gap-2 rounded-full py-3.5
                           bg-slate-100 text-slate-400 text-sm font-medium cursor-not-allowed">
             <Lock size={14} strokeWidth={2} />
-            Lieu fermé — signalement indisponible
+            {t('closedReport')}
           </div>
         )}
 
@@ -513,13 +508,15 @@ function AuthGate({ children }) {
 /* ─── App root ───────────────────────────────────────────────────── */
 export default function App() {
   return (
-    <AuthProvider>
-      <UserProvider>
-        <AuthGate>
-          <AppInner />
-        </AuthGate>
-      </UserProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <UserProvider>
+          <AuthGate>
+            <AppInner />
+          </AuthGate>
+        </UserProvider>
+      </AuthProvider>
+    </LanguageProvider>
   )
 }
 
@@ -533,6 +530,7 @@ const tabVariants = {
 function AppInner() {
   const { libraries, loading, isMock, report } = useStudySpots()
   const { addScore } = useUser()
+  const { t } = useLanguage()
   const [activeTab,   setActiveTab]   = useState('explore')
   const [selectedLib, setSelectedLib] = useState(null)
 
@@ -564,7 +562,7 @@ function AppInner() {
       <div className="h-screen w-full max-w-lg mx-auto flex flex-col items-center
                       justify-center gap-3 bg-slate-50">
         <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-        <p className="text-sm text-slate-400 font-medium">Chargement des spots…</p>
+        <p className="text-sm text-slate-400 font-medium">{t('loadingSpots')}</p>
       </div>
     )
   }
@@ -577,7 +575,7 @@ function AppInner() {
         <div className="absolute top-0 left-0 right-0 z-[1002] bg-amber-400/90
                         backdrop-blur-sm text-amber-900 text-xs font-medium
                         text-center py-1.5 px-4">
-          ⚠️ Mode démo — configure <code className="font-mono">.env</code> pour connecter Airtable
+          {t('demoBanner')}
         </div>
       )}
 

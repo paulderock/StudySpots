@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star, BookOpen, Coffee } from 'lucide-react'
+import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star, BookOpen, Coffee, Zap, Lock } from 'lucide-react'
 import { isLibOpen, formatHours } from './utils/time'
 import BottomNav from './components/BottomNav'
 import ExploreTab from './components/tabs/ExploreTab'
@@ -267,6 +267,60 @@ function SuccessView({ onClose }) {
   )
 }
 
+/* ─── Bouton signalement — design pro ────────────────────────────── */
+function ReportButton({ onPress }) {
+  return (
+    <div className="flex flex-col items-center gap-2.5 w-full">
+      {/* Étiquette technique */}
+      <p style={{
+        fontSize: '10px',
+        fontWeight: 700,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: '#94a3b8',
+      }}>
+        +50 pts · Signalement en direct
+      </p>
+
+      {/* Bouton */}
+      <motion.button
+        onClick={onPress}
+        whileTap={{
+          scale: 0.96,
+          y: 1,
+          x: [0, -1, 1, -1, 0],
+          transition: { x: { duration: 0.2, ease: 'easeInOut' }, scale: { duration: 0.1 } },
+        }}
+        whileHover={{ scale: 1.01 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+        className="btn-shimmer w-full flex items-center justify-center gap-3
+                   text-white rounded-xl py-4 px-6"
+        style={{
+          background: '#0a0f1e',
+          border: '1px solid rgba(255,255,255,0.10)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.20), 0 4px 8px rgba(0,0,0,0.15)',
+          fontSize: '0.875rem',
+          fontWeight: 500,
+          letterSpacing: '0.04em',
+        }}
+      >
+        {/* Live dot conic gradient */}
+        <span
+          className="live-dot shrink-0"
+          style={{
+            width: 10, height: 10,
+            borderRadius: '50%',
+            background: 'conic-gradient(from 0deg, #6366f1, #3b82f6, #818cf8, #6366f1)',
+            boxShadow: '0 0 6px rgba(99,102,241,0.6)',
+            display: 'inline-block',
+          }}
+        />
+        Signaler l'état actuel
+      </motion.button>
+    </div>
+  )
+}
+
 /* ─── Panneau détail bibliothèque ────────────────────────────────── */
 function LibrarySheet({ lib, onClose, onReport }) {
   const [view, setView] = useState('detail')
@@ -423,22 +477,15 @@ function LibrarySheet({ lib, onClose, onReport }) {
         </div>
 
         {/* Bouton signalement */}
-        <button
-          onClick={canReport ? () => setView('report') : undefined}
-          disabled={!canReport}
-          className="w-full font-semibold text-base rounded-2xl py-4 transition-all duration-200"
-          style={canReport ? {
-            background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
-            color: 'white',
-            boxShadow: '0 8px 30px rgba(59,130,246,0.30), 0 2px 8px rgba(59,130,246,0.20)',
-          } : {
-            background: 'rgba(241,245,249,0.9)',
-            color: '#94a3b8',
-            cursor: 'not-allowed',
-          }}
-        >
-          {canReport ? 'Signaler le niveau de place' : '🔒 Lieu fermé — pas de signalement'}
-        </button>
+        {canReport ? (
+          <ReportButton onPress={() => setView('report')} />
+        ) : (
+          <div className="w-full flex items-center justify-center gap-2 rounded-full py-3.5
+                          bg-slate-100 text-slate-400 text-sm font-medium cursor-not-allowed">
+            <Lock size={14} strokeWidth={2} />
+            Lieu fermé — signalement indisponible
+          </div>
+        )}
 
       </div>
     </div>

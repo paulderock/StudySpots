@@ -1,54 +1,140 @@
-import { useUser } from '../../context/UserContext'
+import { useState } from 'react'
+import {
+  MapPin, Zap, Star, ChevronRight, Bell, Moon, Lock,
+  MessageSquare, Shield, Trash2, BookOpen, Clock, Sun,
+  LogOut, Bug, HelpCircle, Sunrise, Flame, Moon as MoonIcon,
+  Info, User,
+} from 'lucide-react'
+import { useUser, getBadge } from '../../context/UserContext'
 
-/* ── Barre de progression vers le niveau suivant ─────────────── */
-function ProgressBar({ score, nextLevel }) {
-  if (!nextLevel) return null
-  const prevLevel = score >= 1000 ? 1000 : score >= 500 ? 500 : score >= 100 ? 100 : 0
-  const pct = Math.min(((score - prevLevel) / (nextLevel - prevLevel)) * 100, 100)
+/* ── Barre de progression ──────────────────────────────────────── */
+function ProgressBar({ score, badge }) {
+  if (!badge.next) return null
+  const pct = Math.min(((score - badge.prev) / (badge.next - badge.prev)) * 100, 100)
   return (
-    <div className="w-full bg-indigo-100/60 rounded-full h-2 overflow-hidden">
+    <div className="w-full bg-white/40 rounded-full h-1.5 overflow-hidden">
       <div
-        className="h-2 rounded-full transition-all duration-700"
-        style={{
-          width: `${pct}%`,
-          background: 'linear-gradient(90deg, #6366f1, #3b82f6)',
-        }}
+        className="h-1.5 rounded-full transition-all duration-700"
+        style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#6366f1,#3b82f6)' }}
       />
     </div>
   )
 }
 
-const SETTINGS = [
-  { icon: '🔔', label: 'Notifications',   value: 'Activées' },
-  { icon: '🌙', label: 'Mode sombre',      value: 'Bientôt'  },
-  { icon: '🗺️', label: 'Rayon de recherche', value: 'Amsterdam' },
-  { icon: '🔒', label: 'Confidentialité', value: '›'        },
-  { icon: '💬', label: 'Nous contacter',  value: '›'        },
-]
+/* ── Bloc section settings ─────────────────────────────────────── */
+function Section({ title, children }) {
+  return (
+    <div className="px-5 mb-4">
+      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2 px-1">
+        {title}
+      </p>
+      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-slate-50"
+           style={{ border: '1px solid rgba(226,232,240,0.7)' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
 
+/* ── Ligne settings ────────────────────────────────────────────── */
+function Row({ icon: Icon, label, value, danger, onClick, toggle, toggled, iconColor }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-3
+                  hover:bg-slate-50/80 transition-colors text-left`}
+    >
+      <span className="w-6 flex items-center justify-center shrink-0">
+        <Icon size={15} strokeWidth={2}
+              style={{ color: danger ? '#ef4444' : iconColor ?? '#64748b' }} />
+      </span>
+      <span className={`flex-1 text-sm font-medium ${danger ? 'text-red-500' : 'text-slate-700'}`}>
+        {label}
+      </span>
+      {toggle ? (
+        <div
+          className="w-9 h-5 rounded-full transition-colors duration-200 flex items-center px-0.5"
+          style={{ background: toggled ? '#3b82f6' : '#e2e8f0' }}
+        >
+          <div
+            className="w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200"
+            style={{ transform: toggled ? 'translateX(16px)' : 'translateX(0)' }}
+          />
+        </div>
+      ) : value ? (
+        <span className="text-xs text-slate-400 font-medium">{value}</span>
+      ) : (
+        <ChevronRight size={14} strokeWidth={2} className="text-slate-300 shrink-0" />
+      )}
+    </button>
+  )
+}
+
+/* ── Badge locked/unlocked ─────────────────────────────────────── */
+function AchievementBadge({ icon: Icon, label, unlocked, color }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div
+        className="w-14 h-14 rounded-2xl flex items-center justify-center"
+        style={{
+          background: unlocked ? `${color}18` : '#f1f5f9',
+          border: unlocked ? `1.5px solid ${color}30` : '1.5px solid #e2e8f0',
+        }}
+      >
+        <Icon size={22} strokeWidth={1.8}
+              style={{ color: unlocked ? color : '#cbd5e1' }} />
+      </div>
+      <span className={`text-[10px] font-semibold text-center leading-tight max-w-[60px] ${
+        unlocked ? 'text-slate-700' : 'text-slate-400'
+      }`}>
+        {label}
+      </span>
+    </div>
+  )
+}
+
+/* ── Composant principal ───────────────────────────────────────── */
 export default function ProfileTab() {
-  const { user, badge } = useUser()
+  const { user, badge, resetUser } = useUser()
+  const [locationShare, setLocationShare] = useState(false)
+
+  /* badges débloqués selon reports */
+  const earlyBird  = false              // nécessiterait timestamp horaire
+  const onFire     = user.reports >= 3
+  const nightOwl   = false              // idem
+
+  function maskEmail(email) {
+    const [local, domain] = email.split('@')
+    return local.slice(0, 2) + '••••@' + domain
+  }
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  function formatTimeAgo(iso) {
+    const diff = (Date.now() - new Date(iso)) / 1000
+    if (diff < 60)   return 'À l\'instant'
+    if (diff < 3600) return `Il y a ${Math.floor(diff/60)} min`
+    if (diff < 86400) return `Il y a ${Math.floor(diff/3600)}h`
+    return `Il y a ${Math.floor(diff/86400)}j`
+  }
 
   return (
-    <div
-      className="absolute inset-0 overflow-y-auto bg-slate-50 pb-36"
-      style={{ scrollbarWidth: 'none' }}
-    >
-      {/* ── Hero profil ──────────────────────────────────────── */}
-      <div
-        className="bg-white pt-14 pb-6 px-5 mb-3"
-        style={{ borderBottom: '1px solid rgba(226,232,240,0.7)' }}
-      >
+    <div className="absolute inset-0 overflow-y-auto bg-slate-50 pb-36"
+         style={{ scrollbarWidth: 'none' }}>
+
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <div className="bg-white pt-14 pb-5 px-5 mb-3"
+           style={{ borderBottom: '1px solid rgba(226,232,240,0.7)' }}>
+
         {/* Avatar + nom */}
         <div className="flex items-center gap-4 mb-5">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center
-                       shadow-md shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #dbeafe, #e0e7ff)',
-              boxShadow: '0 8px 24px rgba(99,102,241,0.15)',
-            }}
-          >
+          <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-md shrink-0"
+               style={{
+                 background: 'linear-gradient(135deg, #dbeafe, #e0e7ff)',
+                 boxShadow: '0 8px 24px rgba(99,102,241,0.15)',
+               }}>
             <span className="text-2xl font-black text-indigo-600">
               {user.fullName.charAt(0)}
             </span>
@@ -57,26 +143,21 @@ export default function ProfileTab() {
             <h1 className="font-black text-slate-900 text-lg tracking-tight leading-tight">
               {user.fullName}
             </h1>
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="text-base">{badge.emoji}</span>
-              <span
-                className="text-xs font-bold rounded-full px-2.5 py-0.5"
-                style={{ background: badge.color + '18', color: badge.color }}
-              >
-                {badge.label}
-              </span>
-            </div>
+            <span
+              className="inline-block text-xs font-bold rounded-full px-2.5 py-0.5 mt-1.5"
+              style={{ background: badge.color + '18', color: badge.color }}
+            >
+              {badge.label}
+            </span>
           </div>
         </div>
 
         {/* Carte score */}
-        <div
-          className="rounded-2xl p-4 mb-4"
-          style={{
-            background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)',
-            border: '1px solid rgba(99,102,241,0.12)',
-          }}
-        >
+        <div className="rounded-2xl p-4 mb-4"
+             style={{
+               background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)',
+               border: '1px solid rgba(99,102,241,0.12)',
+             }}>
           <div className="flex items-end justify-between mb-3">
             <div>
               <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-0.5">
@@ -94,100 +175,126 @@ export default function ProfileTab() {
               <p className="text-xs text-indigo-300 mt-0.5">+50 pts par rapport</p>
             </div>
           </div>
-
           {badge.next ? (
             <>
-              <ProgressBar score={user.score} nextLevel={badge.next} />
+              <ProgressBar score={user.score} badge={badge} />
               <p className="text-xs text-indigo-400 mt-1.5">
-                {badge.next - user.score} pts pour atteindre le niveau suivant
+                {badge.next - user.score} pts pour <span className="font-semibold">{getBadge(badge.next).label}</span>
               </p>
             </>
           ) : (
-            <p className="text-xs font-bold text-amber-500">
-              🏆 Niveau maximum atteint !
-            </p>
+            <p className="text-xs font-bold text-amber-500">Niveau maximum atteint !</p>
           )}
         </div>
 
-        {/* Stats rapides */}
+        {/* Stats */}
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: 'Signalements', value: user.reports,  emoji: '📍' },
-            { label: 'Score',        value: user.score,    emoji: '⭐' },
-            { label: 'Niveau',       value: badge.label,   emoji: badge.emoji },
+            { label: 'Signalements', value: user.reports,  Icon: MapPin,  color: '#6366f1' },
+            { label: 'Score',        value: user.score,    Icon: Star,    color: '#f59e0b' },
+            { label: 'Niveau',       value: badge.label,   Icon: Zap,     color: badge.color },
           ].map(s => (
-            <div
-              key={s.label}
-              className="bg-slate-50 rounded-xl p-3 text-center"
-              style={{ border: '1px solid rgba(226,232,240,0.8)' }}
-            >
-              <p className="text-lg mb-1">{s.emoji}</p>
-              <p className="font-bold text-slate-800 text-sm leading-none truncate">
-                {s.value}
-              </p>
+            <div key={s.label} className="bg-slate-50 rounded-xl p-3 text-center"
+                 style={{ border: '1px solid rgba(226,232,240,0.8)' }}>
+              <s.Icon size={16} strokeWidth={2} className="mx-auto mb-1.5"
+                      style={{ color: s.color }} />
+              <p className="font-bold text-slate-800 text-sm leading-none truncate">{s.value}</p>
               <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{s.label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Comment gagner des points ─────────────────────────── */}
+      {/* ── Activités récentes ────────────────────────────────────── */}
+      {user.recentActivity?.length > 0 && (
+        <div className="px-5 mb-4">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2 px-1">
+            Activités récentes
+          </p>
+          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-slate-50"
+               style={{ border: '1px solid rgba(226,232,240,0.7)' }}>
+            {user.recentActivity.map((a, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+                <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                  <MapPin size={12} strokeWidth={2} className="text-green-500" />
+                </div>
+                <span className="flex-1 text-sm text-slate-600 font-medium">{a.label}</span>
+                <span className="text-xs font-bold text-green-600">{a.pts}</span>
+                <span className="text-[10px] text-slate-400 ml-1">{formatTimeAgo(a.at)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Badges ───────────────────────────────────────────────── */}
       <div className="px-5 mb-4">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 px-1">
-          Comment progresser
+        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2 px-1">
+          Badges
         </p>
-        <div
-          className="bg-white rounded-2xl p-4 space-y-3"
-          style={{ border: '1px solid rgba(226,232,240,0.7)' }}
-        >
-          {[
-            { icon: '📍', action: 'Signaler un niveau de fréquentation', pts: '+50 pts' },
-            { icon: '🔥', action: 'Signaler 5 fois en une journée',       pts: 'Bientôt' },
-            { icon: '⭐', action: 'Être le premier à signaler',           pts: 'Bientôt' },
-          ].map(r => (
-            <div key={r.action} className="flex items-center gap-3">
-              <span className="text-xl">{r.icon}</span>
-              <span className="flex-1 text-sm text-slate-600 font-medium">{r.action}</span>
-              <span
-                className="text-xs font-bold px-2 py-0.5 rounded-full"
-                style={{ background: '#f0fdf4', color: '#16a34a' }}
-              >
-                {r.pts}
-              </span>
-            </div>
-          ))}
+        <div className="bg-white rounded-2xl p-4"
+             style={{ border: '1px solid rgba(226,232,240,0.7)' }}>
+          <div className="flex justify-around">
+            <AchievementBadge icon={Sunrise} label="Lève-tôt"       unlocked={earlyBird} color="#f59e0b" />
+            <AchievementBadge icon={Flame}   label="Série"          unlocked={onFire}    color="#ef4444" />
+            <AchievementBadge icon={MoonIcon} label="Oiseau de nuit" unlocked={nightOwl} color="#6366f1" />
+            <AchievementBadge icon={MapPin}  label="Explorateur"    unlocked={user.reports >= 1} color="#10b981" />
+          </div>
+          <p className="text-center text-[10px] text-slate-400 mt-3 font-medium">
+            {[earlyBird, onFire, nightOwl, user.reports >= 1].filter(Boolean).length}/4 badges débloqués
+          </p>
         </div>
       </div>
 
-      {/* ── Paramètres ───────────────────────────────────────── */}
-      <div className="px-5">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 px-1">
-          Paramètres
-        </p>
-        <div
-          className="bg-white rounded-2xl overflow-hidden divide-y divide-slate-100"
-          style={{ border: '1px solid rgba(226,232,240,0.7)' }}
-        >
-          {SETTINGS.map(s => (
-            <button
-              key={s.label}
-              className="w-full flex items-center gap-3 px-4 py-3.5
-                         hover:bg-slate-50 transition-colors text-left"
-            >
-              <span className="text-base">{s.icon}</span>
-              <span className="flex-1 text-sm font-medium text-slate-700">{s.label}</span>
-              <span className="text-xs text-slate-400 font-medium">{s.value}</span>
-            </button>
-          ))}
-        </div>
+      {/* ── Comment progresser ───────────────────────────────────── */}
+      <Section title="Comment progresser">
+        <Row icon={MapPin}  label="Signaler un niveau de fréquentation" value="+50 pts" iconColor="#6366f1" />
+        <Row icon={Flame}   label="Signaler 3 jours d'affilée"          value="Bientôt" iconColor="#ef4444" />
+        <Row icon={Star}    label="Être le premier à signaler"           value="Bientôt" iconColor="#f59e0b" />
+      </Section>
 
-        <p className="text-center text-xs text-slate-300 mt-6 font-medium">
-          StudySpot AMS · v1.0
-        </p>
-        <p className="text-center text-xs text-slate-300 mt-1">
-          Made with ❤️ in Amsterdam
-        </p>
+      {/* ── Mon Compte ───────────────────────────────────────────── */}
+      <Section title="Mon Compte">
+        <Row icon={User}    label="Email"          value={maskEmail(user.email)} />
+        <Row icon={Clock}   label="Membre depuis"  value={formatDate(user.joinedAt)} />
+        <Row icon={Lock}    label="Mot de passe"   />
+      </Section>
+
+      {/* ── Confidentialité ──────────────────────────────────────── */}
+      <Section title="Confidentialité & Données">
+        <Row
+          icon={Shield}
+          label="Partager ma position en arrière-plan"
+          toggle
+          toggled={locationShare}
+          onClick={() => setLocationShare(v => !v)}
+        />
+        <Row icon={Trash2} label="Supprimer mon compte et mes données" danger />
+      </Section>
+
+      {/* ── Support ──────────────────────────────────────────────── */}
+      <Section title="Support & Infos">
+        <Row icon={Info}         label="Version de l'app"  value="v1.0.4" />
+        <Row icon={Bug}          label="Signaler un bug"   />
+        <Row icon={HelpCircle}   label="Aide & FAQ"        />
+      </Section>
+
+      {/* ── Déconnexion ──────────────────────────────────────────── */}
+      <div className="px-5 mb-6">
+        <button
+          onClick={resetUser}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl
+                     bg-red-50 text-red-500 font-semibold text-sm
+                     border border-red-100 hover:bg-red-100 transition-colors active:scale-[0.98]"
+        >
+          <LogOut size={16} strokeWidth={2} />
+          Déconnexion
+        </button>
       </div>
+
+      <p className="text-center text-xs text-slate-300 pb-4 font-medium">
+        StudySpot AMS · Made with ♥ in Amsterdam
+      </p>
     </div>
   )
 }

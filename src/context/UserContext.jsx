@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 
 const UserContext = createContext(null)
 
@@ -29,22 +30,66 @@ export function UserProvider({ children }) {
     } catch { return DEFAULT_USER }
   })
 
-  function addScore(points = 50, spotName = '') {
-    setUser(prev => {
-      const activity = {
-        label: spotName ? `Signalement à ${spotName}` : 'Signalement',
-        pts: `+${points} pts`,
-        at: new Date().toISOString(),
+  // Charge le score réel depuis Supabase au démarrage
+  useEffect(() => {
+    if (!supabase) return
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, score, reports')
+        .eq('id', session.user.id)
+        .single()
+      if (data) {
+        setUser(prev => ({
+          ...prev,
+          fullName: data.full_name ?? prev.fullName,
+          score:    data.score   ?? prev.score,
+          reports:  data.reports ?? prev.reports,
+        }))
       }
+    })
+  }, [])
+
+  async function addScore(points = 50, spotName = '') {
+    const activity = {
+      label: spotName ? `Signalement à ${spotName}` : 'Signalement',
+      pts: `+${points} pts`,
+      at: new Date().toISOString(),
+    }
+
+    // Mise à jour locale immédiate
+    setUser(prev => {
       const next = {
         ...prev,
-        score: prev.score + points,
-        reports: prev.reports + 1,
+        score:          prev.score + points,
+        reports:        prev.reports + 1,
         recentActivity: [activity, ...(prev.recentActivity ?? [])].slice(0, 5),
       }
       try { localStorage.setItem('studyspot_user', JSON.stringify(next)) } catch {}
       return next
     })
+
+    // Sync Supabase
+    if (supabase) {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('score, reports')
+          .eq('id', authUser.id)
+          .single()
+        if (profile) {
+          await supabase
+            .from('profiles')
+            .update({
+              score:   (profile.score   ?? 0) + points,
+              reports: (profile.reports ?? 0) + 1,
+            })
+            .eq('id', authUser.id)
+        }
+      }
+    }
   }
 
   function resetUser() {

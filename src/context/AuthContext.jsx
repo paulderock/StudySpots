@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
 
   async function signUp(email, password, firstName, phone) {
     setError(null)
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       phone: phone || undefined,
@@ -34,6 +34,16 @@ export function AuthProvider({ children }) {
       },
     })
     if (error) { setError(error.message); return false }
+
+    // Insère la ligne profil dès la création du compte
+    if (data?.user) {
+      await supabase.from('profiles').insert({
+        id:        data.user.id,
+        full_name: firstName,
+        score:     0,
+        reports:   0,
+      })
+    }
     return true
   }
 

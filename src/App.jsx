@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star } from 'lucide-react'
+import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star, BookOpen, Coffee } from 'lucide-react'
 import { isLibOpen, formatHours } from './utils/time'
-import Map from './components/Map'
-import LibraryList from './components/LibraryList'
+import BottomNav from './components/BottomNav'
+import ExploreTab from './components/tabs/ExploreTab'
+import MapTab from './components/tabs/MapTab'
+import ProfileTab from './components/tabs/ProfileTab'
 import { useStudySpots } from './hooks/useStudySpots'
+import { UserProvider, useUser } from './context/UserContext'
 
 /* ─── Config notation ────────────────────────────────────────────── */
 const RATINGS = [
@@ -66,11 +69,12 @@ function OpenBadge({ openingTime, closingTime }) {
   const open = isLibOpen(openingTime, closingTime)
   if (open === null) return null
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-bold
-                      rounded-full px-3 py-1 backdrop-blur-md
-      ${open ? 'bg-emerald-500/90 text-white' : 'bg-red-500/90 text-white'}`}>
-      <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
-      {open ? 'OUVERT' : 'FERMÉ'}
+    <span className="inline-flex items-center gap-1 text-[11px] font-semibold
+                     rounded-full px-2.5 py-0.5"
+          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', color: '#fff' }}>
+      <span className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ background: open ? '#4ade80' : '#f87171' }} />
+      {open ? 'Open' : 'Closed'}
     </span>
   )
 }
@@ -94,13 +98,15 @@ function PlaceholderImage({ type }) {
 /* ─── Badge type ─────────────────────────────────────────────────── */
 function TypeBadge({ type }) {
   const isCafe = type === 'Café'
+  const Icon = isCafe ? Coffee : BookOpen
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold
                       rounded-full px-2.5 py-0.5 border
       ${isCafe
         ? 'bg-amber-50 text-amber-700 border-amber-200/80'
         : 'bg-blue-50  text-blue-700  border-blue-200/80'}`}>
-      {isCafe ? '☕' : '📚'} {type ?? 'Lieu'}
+      <Icon size={11} strokeWidth={2} />
+      {type ?? 'Lieu'}
     </span>
   )
 }
@@ -250,7 +256,8 @@ function SuccessView({ onClose }) {
         Merci pour ton aide !
       </h2>
       <p className="text-sm text-slate-500 mb-1">Ton signalement a été pris en compte.</p>
-      <p className="text-xs text-slate-400 mb-8">La carte a été mise à jour en temps réel.</p>
+      <p className="text-xs text-slate-400 mb-2">La carte a été mise à jour en temps réel.</p>
+      <p className="text-xs font-bold text-indigo-500 mb-8">+50 pts ajoutés à ton score ✨</p>
       <button onClick={onClose}
         className="px-8 py-3 rounded-2xl bg-slate-900 text-white
                    font-semibold text-sm hover:bg-slate-700 transition-colors">
@@ -348,25 +355,21 @@ function LibrarySheet({ lib, onClose, onReport }) {
               ${isStale(lib.lastUpdated)
                 ? 'text-slate-400 bg-slate-50 border-slate-200'
                 : 'text-emerald-700 bg-emerald-50 border-emerald-200'}`}>
-              {isStale(lib.lastUpdated) ? '🕐' : '🟢'} {formatTimeAgo(lib.lastUpdated)}
+              {isStale(lib.lastUpdated)
+                ? <Clock size={11} strokeWidth={2} />
+                : <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
+              {formatTimeAgo(lib.lastUpdated)}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-xs font-medium
                              text-slate-400 bg-slate-50 border border-slate-200
                              rounded-full px-2.5 py-0.5">
-              🕐 Aucun signalement
-            </span>
-          )}
-          {lib.recentReport && !isStale(lib.lastUpdated) && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium
-                             text-amber-600 bg-amber-50 border border-amber-200
-                             rounded-full px-2.5 py-0.5">
-              ⚡ Récent
+              <Clock size={11} strokeWidth={2} /> Aucun signalement
             </span>
           )}
         </div>
 
-        {/* Infos pratiques — carte glassmorphism */}
+        {/* Infos pratiques */}
         <div className="rounded-2xl overflow-hidden divide-y divide-slate-100/80 mb-4"
              style={{ background: 'rgba(248,250,252,0.85)', border: '1px solid rgba(226,232,240,0.7)' }}>
 
@@ -442,11 +445,29 @@ function LibrarySheet({ lib, onClose, onReport }) {
   )
 }
 
-/* ─── App ────────────────────────────────────────────────────────── */
+/* ─── App root (avec UserProvider) ──────────────────────────────── */
 export default function App() {
+  return (
+    <UserProvider>
+      <AppInner />
+    </UserProvider>
+  )
+}
+
+/* ─── App inner ──────────────────────────────────────────────────── */
+const tabVariants = {
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.18, ease: 'easeOut' } },
+  exit:    { opacity: 0, y: -6, transition: { duration: 0.12, ease: 'easeIn' } },
+}
+
+function AppInner() {
   const { libraries, loading, isMock, report } = useStudySpots()
-  const [showList,    setShowList]    = useState(false)
+  const { addScore } = useUser()
+  const [activeTab,   setActiveTab]   = useState('explore')
   const [selectedLib, setSelectedLib] = useState(null)
+
+  const showBanner = isMock && import.meta.env.DEV
 
   useEffect(() => {
     if (!selectedLib) return
@@ -455,8 +476,17 @@ export default function App() {
   }, [libraries])
 
   function handleSelectLib(lib) {
-    setShowList(false)
     setSelectedLib(lib)
+  }
+
+  function handleTabChange(tab) {
+    setActiveTab(tab)
+    setSelectedLib(null)
+  }
+
+  async function handleReport(libId, rating) {
+    await report(libId, rating)
+    addScore(50)
   }
 
   /* Chargement */
@@ -471,15 +501,10 @@ export default function App() {
   }
 
   return (
-    <div className="relative h-screen w-full max-w-lg mx-auto overflow-hidden bg-slate-100">
-
-      {/* Carte plein écran */}
-      <div className="absolute inset-0">
-        <Map libraries={libraries} onSelect={handleSelectLib} />
-      </div>
+    <div className="relative h-screen w-full max-w-lg mx-auto overflow-hidden bg-slate-50">
 
       {/* Bannière démo — local uniquement */}
-      {isMock && import.meta.env.DEV && (
+      {showBanner && (
         <div className="absolute top-0 left-0 right-0 z-[1002] bg-amber-400/90
                         backdrop-blur-sm text-amber-900 text-xs font-medium
                         text-center py-1.5 px-4">
@@ -487,58 +512,51 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Nav flottante glassmorphism ─────────────────────────── */}
-      <nav className={`absolute left-4 right-4 z-[1000] flex items-center justify-between
-                       glass rounded-2xl px-5 py-3 shadow-xl shadow-black/5
-                       ${isMock && import.meta.env.DEV ? 'top-10' : 'top-4'}`}>
-        <div>
-          <h1 className="font-bold text-slate-900 text-lg tracking-tight leading-none">
-            StudySpot AMS
-          </h1>
-          <p className="text-xs text-slate-400 mt-0.5 font-medium">{libraries.length} lieux</p>
-        </div>
-        <button
-          onClick={() => { setShowList((v) => !v); setSelectedLib(null) }}
-          className="px-4 py-2 rounded-full text-sm font-semibold transition-all
-                     bg-slate-900 text-white hover:bg-slate-700 active:scale-95"
-        >
-          {showList ? '✕ Fermer' : '☰ Liste'}
-        </button>
-      </nav>
-
-      {/* ── Panneau liste ──────────────────────────────────────────── */}
-      <AnimatePresence>
-        {showList && !selectedLib && (
-          <motion.div
-            key="list-sheet"
-            className="absolute bottom-0 left-0 right-0 z-[1000]
-                       rounded-t-[32px] shadow-2xl max-h-[65vh] overflow-y-auto"
-            style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(24px)',
-                     WebkitBackdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.4)' }}
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            drag="y"
-            dragConstraints={{ top: 0 }}
-            dragElastic={{ top: 0, bottom: 0.3 }}
-            onDragEnd={(_, info) => { if (info.offset.y > 80) setShowList(false) }}
-          >
-            <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
-              <div className="w-9 h-1 rounded-full bg-slate-200" />
-            </div>
-            <LibraryList libraries={libraries} onSelect={handleSelectLib} />
+      {/* ── Contenu des onglets ────────────────────────────────────── */}
+      <AnimatePresence mode="wait">
+        {activeTab === 'explore' && (
+          <motion.div key="explore" className="absolute inset-0" variants={tabVariants}
+                      initial="initial" animate="animate" exit="exit">
+            <ExploreTab libraries={libraries} onSelect={handleSelectLib} />
+          </motion.div>
+        )}
+        {activeTab === 'map' && (
+          <motion.div key="map" className="absolute inset-0" variants={tabVariants}
+                      initial="initial" animate="animate" exit="exit">
+            <MapTab libraries={libraries} onSelect={handleSelectLib} showBanner={showBanner} />
+          </motion.div>
+        )}
+        {activeTab === 'profile' && (
+          <motion.div key="profile" className="absolute inset-0" variants={tabVariants}
+                      initial="initial" animate="animate" exit="exit">
+            <ProfileTab />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Bottom sheet détail ─────────────────────────────────────── */}
+      {/* ── Bottom Nav (masquée quand une fiche est ouverte) ──────── */}
+      <AnimatePresence>
+        {!selectedLib && (
+          <motion.div
+            key="bottom-nav"
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0,  opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+            className="absolute inset-x-0 bottom-0 z-[1001]"
+          >
+            <BottomNav active={activeTab} onChange={handleTabChange} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Bottom sheet détail (overlay global) ─────────────────── */}
       <AnimatePresence>
         {selectedLib && (
           <>
             <motion.div
               key="backdrop"
-              className="absolute inset-0 z-[1000]"
+              className="absolute inset-0 z-[1002]"
               style={{ background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(2px)' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -548,7 +566,7 @@ export default function App() {
             />
             <motion.div
               key="detail-sheet"
-              className="absolute bottom-0 left-0 right-0 z-[1001]
+              className="absolute bottom-0 left-0 right-0 z-[1003]
                          rounded-t-[32px] shadow-2xl"
               style={{ background: 'rgba(255,255,255,0.97)' }}
               initial={{ y: '100%' }}
@@ -564,7 +582,7 @@ export default function App() {
               <LibrarySheet
                 lib={selectedLib}
                 onClose={() => setSelectedLib(null)}
-                onReport={report}
+                onReport={handleReport}
               />
             </motion.div>
           </>

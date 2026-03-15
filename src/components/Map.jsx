@@ -1,4 +1,4 @@
-import { Fragment, useState, useCallback } from 'react'
+import { Fragment, useState, useCallback, useEffect } from 'react'
 import { MapContainer, TileLayer, CircleMarker, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { isLibOpen } from '../utils/time'
@@ -22,6 +22,16 @@ function getGlowClass(occupancy) {
 function isStale(lastUpdated) {
   if (!lastUpdated) return true
   return Date.now() - new Date(lastUpdated).getTime() > STALE_MS
+}
+
+/* ── Fly to a point programmatically ────────────────────────────── */
+function FlyToController({ focusPoint }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!focusPoint) return
+    map.flyTo([focusPoint.lat, focusPoint.lng], 16, { duration: 1.0, easeLinearity: 0.4 })
+  }, [focusPoint])
+  return null
 }
 
 /* ── Composant interne : accède au contexte Leaflet via useMap() ── */
@@ -95,7 +105,7 @@ function LocateControl({ onLocated }) {
 }
 
 /* ── Composant principal ─────────────────────────────────────────── */
-export default function Map({ libraries = [], onSelect }) {
+export default function Map({ libraries = [], onSelect, focusPoint }) {
   const [userPos, setUserPos] = useState(null)
 
   return (
@@ -175,6 +185,9 @@ export default function Map({ libraries = [], onSelect }) {
             />
           </Fragment>
         )}
+
+        {/* Fly to controller */}
+        <FlyToController focusPoint={focusPoint} />
 
         {/* Bouton "Me localiser" */}
         <LocateControl onLocated={setUserPos} />

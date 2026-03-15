@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { User, ChevronRight } from 'lucide-react'
 import Map from '../Map'
 import { isLibOpen } from '../../utils/time'
+import { useLanguage } from '../../context/LanguageContext'
 
 /* ── Constantes sheet ─────────────────────────────────────────── */
 // Les boutons flottants occupent ~80px depuis le bas (bottom-8 + 52px).
@@ -32,7 +33,7 @@ function OccupancyGauge({ occupancy }) {
 }
 
 /* ── Carte Uber Eats style ────────────────────────────────────── */
-function LibCard({ lib, onSelect }) {
+function LibCard({ lib, onSelect, t }) {
   const isCafe = lib.type === 'Café'
   const open   = isLibOpen(lib.openingTime, lib.closingTime)
 
@@ -80,7 +81,7 @@ function LibCard({ lib, onSelect }) {
               <span className="w-1.5 h-1.5 rounded-full shrink-0"
                     style={{ background: open ? '#4ade80' : '#f87171' }} />
               <span className="text-[11px] font-medium text-slate-400">
-                {open ? 'Ouvert' : 'Fermé'}
+                {open ? t('open') : t('closed')}
               </span>
             </span>
           )}
@@ -94,6 +95,7 @@ function LibCard({ lib, onSelect }) {
 
 /* ── Composant principal ──────────────────────────────────────── */
 export default function MapTab({ libraries, onSelect, showBanner }) {
+  const { t } = useLanguage()
   const [query,          setQuery]          = useState('')
   const [isOpen,         setIsOpen]         = useState(false)
   const [focusPoint,     setFocusPoint]     = useState(null)
@@ -157,7 +159,7 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
             type="text"
             value={query}
             onChange={(e) => { setQuery(e.target.value); setIsOpen(true) }}
-            placeholder="Où veux-tu étudier ?"
+            placeholder={t('searchPlaceholder')}
             className="flex-1 bg-transparent text-sm text-slate-800
                        placeholder-slate-400 font-medium outline-none"
           />
@@ -206,10 +208,10 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
         <div className="px-4 pb-3 flex items-center justify-between">
           <div>
             <h3 className="font-bold text-slate-900 text-base tracking-tight leading-tight">
-              {query ? `Résultats pour "${query}"` : 'Spots près de toi'}
+              {query ? t('resultsFor', query) : t('spotsNearYou')}
             </h3>
             <p className="text-xs text-slate-400 font-medium mt-0.5">
-              {filtered.length} lieu{filtered.length > 1 ? 'x' : ''} disponible{filtered.length > 1 ? 's' : ''}
+              {t('availablePlaces', filtered.length)}
             </p>
           </div>
           {/* Indicateur swipe-up quand fermé */}
@@ -220,7 +222,7 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M12 19V5M5 12l7-7 7 7"/>
               </svg>
-              Glisser
+              {t('swipeUp')}
             </div>
           )}
           {isOpen && (
@@ -252,12 +254,12 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center py-10 gap-2">
               <p className="text-3xl">🔍</p>
-              <p className="text-sm font-semibold text-slate-500">Aucun résultat</p>
-              <p className="text-xs text-slate-400">Essaie un autre terme</p>
+              <p className="text-sm font-semibold text-slate-500">{t('noResults')}</p>
+              <p className="text-xs text-slate-400">{t('tryOther')}</p>
             </div>
           ) : (
             filtered.map(lib => (
-              <LibCard key={lib.id} lib={lib} onSelect={handleCardClick} />
+              <LibCard key={lib.id} lib={lib} onSelect={handleCardClick} t={t} />
             ))
           )}
           {/* Padding pour les boutons flottants (bottom-8 + 52px) */}

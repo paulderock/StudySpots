@@ -2,14 +2,14 @@ import { useState, useMemo } from 'react'
 import { Sparkles, Circle, VolumeX, Coffee, BookOpen, User, ChevronRight } from 'lucide-react'
 import { isLibOpen } from '../../utils/time'
 import { useUser } from '../../context/UserContext'
+import { useLanguage } from '../../context/LanguageContext'
 
-/* ── Filtres avec icônes Lucide ────────────────────────────────── */
 const FILTERS = [
-  { id: 'all',    label: 'Tous',        Icon: () => <Sparkles size={13} strokeWidth={2} /> },
-  { id: 'open',   label: 'Ouvert',      Icon: () => <Circle   size={8}  fill="#22c55e" stroke="none" /> },
-  { id: 'quiet',  label: 'Calme',       Icon: () => <VolumeX  size={13} strokeWidth={2} /> },
-  { id: 'cafe',   label: 'Café',        Icon: () => <Coffee   size={13} strokeWidth={2} /> },
-  { id: 'library', label: 'Librairie',  Icon: () => <BookOpen size={13} strokeWidth={2} /> },
+  { id: 'all',     key: 'filterAll',     Icon: () => <Sparkles size={13} strokeWidth={2} /> },
+  { id: 'open',    key: 'filterOpen',    Icon: () => <Circle   size={8}  fill="#22c55e" stroke="none" /> },
+  { id: 'quiet',   key: 'filterQuiet',   Icon: () => <VolumeX  size={13} strokeWidth={2} /> },
+  { id: 'cafe',    key: 'filterCafe',    Icon: () => <Coffee   size={13} strokeWidth={2} /> },
+  { id: 'library', key: 'filterLibrary', Icon: () => <BookOpen size={13} strokeWidth={2} /> },
 ]
 
 /* ── Couleurs sémantiques par niveau ───────────────────────────── */
@@ -42,18 +42,15 @@ function OccupancyGauge({ occupancy }) {
 }
 
 /* ── Pastille Ouvert/Fermé sur l'image ─────────────────────────── */
-function OpenDot({ open }) {
+function OpenDot({ open, t }) {
   if (open === null) return null
   return (
     <span
       className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
       style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', color: '#fff' }}
     >
-      <span
-        className="w-1.5 h-1.5 rounded-full shrink-0"
-        style={{ background: open ? '#4ade80' : '#f87171' }}
-      />
-      {open ? 'Open' : 'Closed'}
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: open ? '#4ade80' : '#f87171' }} />
+      {open ? t('openBadge') : t('closedBadge')}
     </span>
   )
 }
@@ -77,7 +74,7 @@ function Placeholder({ type, imageUrl }) {
 }
 
 /* ── Carte "À proximité" (format portrait) ────────────────────── */
-function NearbyCard({ lib, onSelect }) {
+function NearbyCard({ lib, onSelect, t }) {
   const open = isLibOpen(lib.openingTime, lib.closingTime)
 
   return (
@@ -103,7 +100,7 @@ function NearbyCard({ lib, onSelect }) {
           />
         ) : null}
         <Placeholder type={lib.type} imageUrl={lib.imageUrl} />
-        <OpenDot open={open} />
+        <OpenDot open={open} t={t} />
       </div>
 
       {/* Info */}
@@ -123,7 +120,7 @@ function NearbyCard({ lib, onSelect }) {
 }
 
 /* ── Carte "Les plus disponibles" (format liste) ──────────────── */
-function TrendingCard({ lib, onSelect, rank }) {
+function TrendingCard({ lib, onSelect, rank, t }) {
   const isCafe = lib.type === 'Café'
   const open   = isLibOpen(lib.openingTime, lib.closingTime)
 
@@ -183,7 +180,7 @@ function TrendingCard({ lib, onSelect, rank }) {
                 style={{ background: open ? '#4ade80' : '#f87171' }}
               />
               <span className="text-[11px] font-medium text-slate-400">
-                {open ? 'Ouvert' : 'Fermé'}
+                {open ? t('open') : t('closed')}
               </span>
             </span>
           )}
@@ -198,6 +195,7 @@ function TrendingCard({ lib, onSelect, rank }) {
 /* ── Composant principal ───────────────────────────────────────── */
 export default function ExploreTab({ libraries, onSelect }) {
   const { user } = useUser()
+  const { t } = useLanguage()
   const [activeFilter, setActiveFilter] = useState('all')
 
   const filtered = useMemo(() => {
@@ -226,14 +224,14 @@ export default function ExploreTab({ libraries, onSelect }) {
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="px-5 pt-16 pb-5">
         <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tighter leading-tight">
-          Salut, {user.name}&nbsp;!
+          {t('greeting', user.name)}
         </h1>
       </div>
 
       {/* ── Filtres rapides ─────────────────────────────────────── */}
       <div className="px-5 mb-6">
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          {FILTERS.map(({ id, label, Icon }) => {
+          {FILTERS.map(({ id, key, Icon }) => {
             const isActive = activeFilter === id
             return (
               <button
@@ -256,7 +254,7 @@ export default function ExploreTab({ libraries, onSelect }) {
                 <span style={{ color: isActive ? '#fff' : '#64748b', display: 'flex', alignItems: 'center' }}>
                   <Icon />
                 </span>
-                {label}
+                {t(key)}
               </button>
             )
           })}
@@ -268,36 +266,30 @@ export default function ExploreTab({ libraries, onSelect }) {
           <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
             <Sparkles size={24} className="text-slate-400" />
           </div>
-          <p className="font-semibold text-slate-600">Aucun lieu pour ce filtre</p>
-          <p className="text-xs text-slate-400 mt-1">Essaie un autre filtre ci-dessus</p>
+          <p className="font-semibold text-slate-600">{t('noPlaces')}</p>
+          <p className="text-xs text-slate-400 mt-1">{t('tryFilter')}</p>
         </div>
       ) : (
         <>
           {/* ── À proximité ────────────────────────────────────── */}
           <div className="mb-7">
             <div className="flex items-center justify-between px-5 mb-3">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                À proximité
-              </h2>
-              <span className="text-xs text-slate-400 font-medium">
-                {filtered.length} lieu{filtered.length > 1 ? 'x' : ''}
-              </span>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('nearby')}</h2>
+              <span className="text-xs text-slate-400 font-medium">{t('places', filtered.length)}</span>
             </div>
             <div className="flex gap-3 overflow-x-auto px-5 pb-2" style={{ scrollbarWidth: 'none' }}>
               {nearby.map(lib => (
-                <NearbyCard key={lib.id} lib={lib} onSelect={onSelect} />
+                <NearbyCard key={lib.id} lib={lib} onSelect={onSelect} t={t} />
               ))}
             </div>
           </div>
 
           {/* ── Les plus disponibles ────────────────────────────── */}
           <div className="px-5 pb-36">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-              Les plus disponibles
-            </h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{t('mostAvailable')}</h2>
             <div className="space-y-2.5">
               {trending.map((lib, i) => (
-                <TrendingCard key={lib.id} lib={lib} onSelect={onSelect} rank={i + 1} />
+                <TrendingCard key={lib.id} lib={lib} onSelect={onSelect} rank={i + 1} t={t} />
               ))}
             </div>
           </div>

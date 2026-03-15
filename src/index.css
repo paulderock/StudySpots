@@ -2,18 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Leaflet — hauteur obligatoire */
-.leaflet-container {
-  width: 100%;
-  height: 100%;
-}
+/* ── Police Inter ─────────────────────────────────────────────── */
+* { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
 
-/* Glow effect sur les points */
-.dot-glow-green  { filter: drop-shadow(0 0 6px #10b981); }
-.dot-glow-orange { filter: drop-shadow(0 0 6px #f59e0b); }
-.dot-glow-red    { filter: drop-shadow(0 0 6px #ef4444); }
+/* ── Leaflet ──────────────────────────────────────────────────── */
+.leaflet-container { width: 100%; height: 100%; }
 
-/* Anneau pulsant */
+/* Cache les contrôles zoom natifs Leaflet */
+.leaflet-control-zoom { display: none !important; }
+
+/* ── Glow points carte ────────────────────────────────────────── */
+.dot-glow-green  { filter: drop-shadow(0 0 7px #10b981cc); }
+.dot-glow-orange { filter: drop-shadow(0 0 7px #f59e0bcc); }
+.dot-glow-red    { filter: drop-shadow(0 0 7px #ef4444cc); }
+
+/* ── Anneau pulsant ───────────────────────────────────────────── */
 @keyframes pulse-ring {
   0%   { transform: scale(1);   stroke-opacity: 0.9; }
   100% { transform: scale(2.4); stroke-opacity: 0;   }
@@ -24,17 +27,14 @@
   animation: pulse-ring 1.8s ease-out infinite;
 }
 
-/* Coche de succès */
+/* ── Animation succès ─────────────────────────────────────────── */
 @keyframes check-pop {
   0%   { transform: scale(0) rotate(-10deg); opacity: 0; }
   65%  { transform: scale(1.25) rotate(4deg); }
   100% { transform: scale(1) rotate(0deg);   opacity: 1; }
 }
-.check-pop {
-  animation: check-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
+.check-pop { animation: check-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
-/* Trait SVG de la coche */
 @keyframes draw-check {
   from { stroke-dashoffset: 60; }
   to   { stroke-dashoffset: 0;  }
@@ -43,4 +43,18 @@
   stroke-dasharray: 60;
   stroke-dashoffset: 60;
   animation: draw-check 0.35s 0.2s ease-out forwards;
+}
+
+/* ── Glassmorphism helpers ────────────────────────────────────── */
+.glass {
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.glass-dark {
+  background: rgba(15,15,20,0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
 }

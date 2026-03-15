@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star } from 'lucide-react'
 import { isLibOpen, formatHours } from './utils/time'
@@ -6,71 +6,56 @@ import Map from './components/Map'
 import LibraryList from './components/LibraryList'
 import { useStudySpots } from './hooks/useStudySpots'
 
-/* ─── Config de notation ────────────────────────────────────────── */
+/* ─── Config notation ────────────────────────────────────────────── */
 const RATINGS = [
-  { value: 1, label: 'Vide',        color: '#10b981', occupancy: 10 },
-  { value: 2, label: 'Calme',       color: '#6ee7b7', occupancy: 30 },
-  { value: 3, label: 'Modéré',      color: '#fbbf24', occupancy: 55 },
-  { value: 4, label: 'Très occupé', color: '#f59e0b', occupancy: 75 },
-  { value: 5, label: 'Complet',     color: '#ef4444', occupancy: 95 },
+  { value: 1, label: 'Vide',        color: '#10b981', pastel: '#d1fae5', glow: '#10b98140' },
+  { value: 2, label: 'Calme',       color: '#34d399', pastel: '#d1fae5', glow: '#34d39940' },
+  { value: 3, label: 'Modéré',      color: '#f59e0b', pastel: '#fef3c7', glow: '#f59e0b40' },
+  { value: 4, label: 'Très occupé', color: '#f97316', pastel: '#ffedd5', glow: '#f9731640' },
+  { value: 5, label: 'Complet',     color: '#ef4444', pastel: '#fee2e2', glow: '#ef444440' },
 ]
 
-/* ─── Helpers ───────────────────────────────────────────────────── */
+/* ─── Helpers ────────────────────────────────────────────────────── */
 function getHeatColor(occupancy) {
   if (occupancy >= 70) return '#ef4444'
   if (occupancy >= 40) return '#f59e0b'
   return '#10b981'
 }
-
 function getOccupancyLabel(occupancy) {
   if (occupancy >= 80) return 'Très chargé'
   if (occupancy >= 60) return 'Animé'
   if (occupancy >= 30) return 'Calme'
   return 'Très calme'
 }
-
-const STALE_MS = 5 * 60 * 60 * 1000  // 5 heures
-
+const STALE_MS = 5 * 60 * 60 * 1000
 function isStale(lastUpdated) {
   if (!lastUpdated) return true
   return Date.now() - new Date(lastUpdated).getTime() > STALE_MS
 }
-
 function formatTimeAgo(lastUpdated) {
   if (!lastUpdated) return null
   const diffMs  = Date.now() - new Date(lastUpdated).getTime()
   const diffMin = Math.floor(diffMs / 60_000)
-  if (diffMin < 1)  return 'À l\'instant'
+  if (diffMin < 1)  return "À l'instant"
   if (diffMin < 60) return `Il y a ${diffMin} min`
   const diffH = Math.floor(diffMin / 60)
   if (diffH < 24)   return `Il y a ${diffH}h`
-  const diffD = Math.floor(diffH / 24)
-  return `Il y a ${diffD}j`
+  return `Il y a ${Math.floor(diffH / 24)}j`
 }
 
-/* ─── Icônes de densité ─────────────────────────────────────────── */
-// Progression cohérente dans la même famille d'icônes :
-// 1 → UserRound  2 → Users  3 → UsersRound  4 → Users2  5 → Users2 + badge "+"
-function CrowdLevelIcon({ value, color, size = 28 }) {
+/* ─── Icônes densité ─────────────────────────────────────────────── */
+function CrowdLevelIcon({ value, color, size = 26 }) {
   const props = { size, color, strokeWidth: 2 }
-
-  /* Note 5 : Users2 + badge "+" pour signifier le débordement */
   if (value === 5) {
     return (
       <div className="relative inline-flex items-center justify-center">
         <Users2 {...props} strokeWidth={2.5} />
-        <span
-          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full
-                     flex items-center justify-center text-white font-black"
-          style={{ background: color, fontSize: '9px', lineHeight: 1 }}
-        >
-          +
-        </span>
+        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full
+                         flex items-center justify-center text-white font-black"
+              style={{ background: color, fontSize: '9px' }}>+</span>
       </div>
     )
   }
-
-  /* Notes 1–4 : même famille visuelle, densité croissante */
   const IconMap = { 1: UserRound, 2: Users, 3: UsersRound, 4: Users2 }
   const Icon = IconMap[value]
   return <Icon {...props} />
@@ -81,54 +66,46 @@ function OpenBadge({ openingTime, closingTime }) {
   const open = isLibOpen(openingTime, closingTime)
   if (open === null) return null
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-bold
-                      rounded-full px-2.5 py-1 backdrop-blur-sm
-      ${open
-        ? 'bg-green-500/90 text-white'
-        : 'bg-red-500/90   text-white'
-      }`}
-    >
-      <span className={`w-1.5 h-1.5 rounded-full ${open ? 'bg-white' : 'bg-white/70'}`} />
+    <span className={`inline-flex items-center gap-1.5 text-xs font-bold
+                      rounded-full px-3 py-1 backdrop-blur-md
+      ${open ? 'bg-emerald-500/90 text-white' : 'bg-red-500/90 text-white'}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
       {open ? 'OUVERT' : 'FERMÉ'}
     </span>
   )
 }
 
-/* ─── Image placeholder ─────────────────────────────────────────── */
+/* ─── Placeholder image ──────────────────────────────────────────── */
 function PlaceholderImage({ type }) {
   const isCafe = type === 'Café'
   return (
     <div className={`w-full h-full flex flex-col items-center justify-center gap-2
       ${isCafe
-        ? 'bg-gradient-to-br from-amber-50 to-amber-100'
-        : 'bg-gradient-to-br from-blue-50 to-indigo-100'
-      }`}
-    >
+        ? 'bg-gradient-to-br from-amber-50 via-amber-100 to-orange-100'
+        : 'bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100'}`}>
       <span className="text-5xl select-none">{isCafe ? '☕' : '📚'}</span>
-      <span className="text-xs font-medium text-gray-400 tracking-wide uppercase">
+      <span className="text-xs font-semibold text-slate-400 tracking-widest uppercase">
         {type ?? 'Lieu'}
       </span>
     </div>
   )
 }
 
-/* ─── Badge de type ──────────────────────────────────────────────── */
+/* ─── Badge type ─────────────────────────────────────────────────── */
 function TypeBadge({ type }) {
   const isCafe = type === 'Café'
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold
                       rounded-full px-2.5 py-0.5 border
       ${isCafe
-        ? 'bg-amber-50 text-amber-700 border-amber-200'
-        : 'bg-blue-50  text-blue-700  border-blue-200'
-      }`}
-    >
+        ? 'bg-amber-50 text-amber-700 border-amber-200/80'
+        : 'bg-blue-50  text-blue-700  border-blue-200/80'}`}>
       {isCafe ? '☕' : '📚'} {type ?? 'Lieu'}
     </span>
   )
 }
 
-/* ─── Vue : formulaire de signalement ──────────────────────────── */
+/* ─── Vue : signalement ──────────────────────────────────────────── */
 function ReportView({ lib, onConfirm, onBack }) {
   const [rating,      setRating]      = useState(null)
   const [submitting,  setSubmitting]  = useState(false)
@@ -140,7 +117,7 @@ function ReportView({ lib, onConfirm, onBack }) {
     setSubmitting(true)
     setSubmitError(null)
     try {
-      await onConfirm(rating) // le parent switch vers 'success' si succès
+      await onConfirm(rating)
     } catch {
       setSubmitError('Connexion impossible. Vérifie ta connexion et réessaie.')
       setSubmitting(false)
@@ -150,55 +127,55 @@ function ReportView({ lib, onConfirm, onBack }) {
   return (
     <div className="px-5 pt-2 pb-8">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 mb-6">
         <button onClick={onBack} disabled={submitting}
-          className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center
-                     text-gray-500 hover:text-gray-800 transition-colors text-sm
-                     disabled:opacity-40">
-          ←
+          className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center
+                     text-slate-500 hover:bg-slate-200 transition-colors disabled:opacity-40">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
         </button>
         <div>
-          <h2 className="font-bold text-gray-900 text-base leading-tight">{lib.name}</h2>
-          <p className="text-xs text-gray-400">Signaler le niveau de place</p>
+          <h2 className="font-bold text-slate-900 text-base leading-tight tracking-tight">
+            {lib.name}
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">Signaler le niveau de fréquentation</p>
         </div>
       </div>
 
-      {/* Échelle 1–5 */}
-      <div className="flex justify-between gap-1 mb-3">
+      {/* Grille 1–5 */}
+      <div className="flex justify-between gap-2 mb-4">
         {RATINGS.map((r) => {
           const isSelected = rating === r.value
           const isActive   = rating !== null && r.value <= rating
-
           return (
             <button
               key={r.value}
               onClick={() => { setRating(r.value); setSubmitError(null) }}
               disabled={submitting}
-              className="flex-1 flex flex-col items-center gap-2 py-3 rounded-2xl
+              className="flex-1 flex flex-col items-center gap-2 py-3.5 rounded-2xl
                          transition-all duration-200 focus:outline-none disabled:opacity-50"
               style={{
-                background: isSelected ? r.color + '22' : 'transparent',
-                transform:  isSelected ? 'scale(1.15)' : 'scale(1)',
-                border: isSelected ? `1.5px solid ${r.color}55` : '1.5px solid transparent',
+                background:  isSelected ? r.pastel : 'rgba(248,250,252,0.8)',
+                border:      isSelected ? `1.5px solid ${r.color}55` : '1.5px solid rgba(226,232,240,0.8)',
+                transform:   isSelected ? 'scale(1.12)' : 'scale(1)',
+                boxShadow:   isSelected ? `0 8px 24px ${r.glow}` : '0 1px 3px rgba(0,0,0,0.04)',
               }}
             >
-              <div
-                className="transition-all duration-200"
-                style={{
-                  filter: isSelected ? `drop-shadow(0 0 5px ${r.color})` : 'none',
-                  opacity: !isActive && rating !== null ? 0.3 : 1,
-                }}
-              >
+              <div style={{
+                filter:  isSelected ? `drop-shadow(0 0 8px ${r.color}99)` : 'none',
+                opacity: !isActive && rating !== null ? 0.25 : 1,
+                transition: 'all 0.2s',
+              }}>
                 <CrowdLevelIcon
                   value={r.value}
-                  color={isActive ? r.color : '#d1d5db'}
-                  size={28}
+                  color={isActive ? r.color : '#cbd5e1'}
+                  size={26}
                 />
               </div>
-              <span
-                className="text-xs font-bold transition-colors duration-200"
-                style={{ color: isActive ? r.color : '#9ca3af' }}
-              >
+              <span className="text-xs font-bold transition-colors duration-200"
+                    style={{ color: isActive ? r.color : '#94a3b8' }}>
                 {r.value}
               </span>
             </button>
@@ -206,23 +183,21 @@ function ReportView({ lib, onConfirm, onBack }) {
         })}
       </div>
 
-      {/* Label dynamique */}
-      <div className="h-7 flex items-center justify-center mb-5">
+      {/* Label sélectionné */}
+      <div className="h-8 flex items-center justify-center mb-5">
         {selected ? (
-          <span
-            className="text-sm font-semibold px-3 py-1 rounded-full transition-all"
-            style={{ color: selected.color, background: selected.color + '18' }}
-          >
+          <span className="text-sm font-semibold px-4 py-1.5 rounded-full"
+                style={{ color: selected.color, background: selected.pastel }}>
             {selected.value}/5 — {selected.label}
           </span>
         ) : (
-          <span className="text-sm text-gray-400">Sélectionne un niveau ci-dessus</span>
+          <span className="text-sm text-slate-400">Sélectionne un niveau ci-dessus</span>
         )}
       </div>
 
-      {/* Message d'erreur */}
+      {/* Erreur */}
       {submitError && (
-        <div className="mb-4 px-4 py-3 rounded-2xl bg-red-50 border border-red-200
+        <div className="mb-4 px-4 py-3 rounded-2xl bg-red-50 border border-red-100
                         flex items-center gap-2">
           <span className="text-base">⚠️</span>
           <p className="text-sm text-red-600 font-medium">{submitError}</p>
@@ -233,181 +208,151 @@ function ReportView({ lib, onConfirm, onBack }) {
       <button
         disabled={!rating || submitting}
         onClick={handleConfirm}
-        className={`w-full font-semibold text-base rounded-2xl py-4 transition-all duration-200
-          flex items-center justify-center gap-2
-          ${rating && !submitting
-            ? 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-md shadow-blue-200'
-            : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-          }`}
+        className="w-full font-semibold text-base rounded-2xl py-4
+                   flex items-center justify-center gap-2 transition-all duration-200"
+        style={rating && !submitting ? {
+          background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+          color: 'white',
+          boxShadow: '0 8px 30px rgba(59,130,246,0.30), 0 2px 8px rgba(59,130,246,0.20)',
+        } : {
+          background: 'rgba(241,245,249,0.9)',
+          color: '#94a3b8',
+          cursor: 'not-allowed',
+        }}
       >
         {submitting ? (
           <>
-            <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white
-                             animate-spin inline-block" />
+            <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
             Envoi en cours…
           </>
-        ) : (
-          'Confirmer le signalement'
-        )}
+        ) : 'Confirmer le signalement'}
       </button>
 
-      {/* Mention communauté */}
-      <p className="text-center text-xs text-gray-400 mt-4 leading-relaxed">
-        Votre signalement aide la communauté étudiante d'Amsterdam.
+      <p className="text-center text-xs text-slate-400 mt-4 leading-relaxed">
+        Ton signalement aide la communauté étudiante d'Amsterdam.
       </p>
     </div>
   )
 }
 
-/* ─── Vue : succès ──────────────────────────────────────────────── */
+/* ─── Vue : succès ───────────────────────────────────────────────── */
 function SuccessView({ onClose }) {
   return (
     <div className="px-5 pt-6 pb-10 flex flex-col items-center text-center">
-      {/* Cercle avec coche animée */}
-      <div className="check-pop w-20 h-20 rounded-full bg-green-50 flex items-center
-                      justify-center mb-5 border-2 border-green-200">
+      <div className="check-pop w-20 h-20 rounded-full bg-emerald-50 flex items-center
+                      justify-center mb-5 border-2 border-emerald-200">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <path
-            className="draw-check"
-            d="M8 21 L17 30 L33 12"
-            stroke="#10b981"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path className="draw-check" d="M8 21 L17 30 L33 12"
+                stroke="#10b981" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
-
-      <h2 className="text-xl font-bold text-gray-900 mb-2">
-        Merci pour ton aide&nbsp;!
+      <h2 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">
+        Merci pour ton aide !
       </h2>
-      <p className="text-sm text-gray-500 mb-1">
-        Ton signalement a été pris en compte.
-      </p>
-      <p className="text-xs text-gray-400 mb-8">
-        La carte a été mise à jour en temps réel.
-      </p>
-
-      <button
-        onClick={onClose}
-        className="px-8 py-3 rounded-2xl bg-gray-900 text-white
-                   font-semibold text-sm hover:bg-gray-700 transition-colors"
-      >
+      <p className="text-sm text-slate-500 mb-1">Ton signalement a été pris en compte.</p>
+      <p className="text-xs text-slate-400 mb-8">La carte a été mise à jour en temps réel.</p>
+      <button onClick={onClose}
+        className="px-8 py-3 rounded-2xl bg-slate-900 text-white
+                   font-semibold text-sm hover:bg-slate-700 transition-colors">
         Retour à la carte
       </button>
     </div>
   )
 }
 
-/* ─── Panneau principal bibliothèque ────────────────────────────── */
+/* ─── Panneau détail bibliothèque ────────────────────────────────── */
 function LibrarySheet({ lib, onClose, onReport }) {
-  const [view, setView] = useState('detail') // 'detail' | 'report' | 'success'
+  const [view, setView] = useState('detail')
+  useEffect(() => { setView('detail') }, [lib?.id])
 
-  // Reset à chaque nouvelle bibliothèque sélectionnée
-  useEffect(() => {
-    setView('detail')
-  }, [lib?.id])
+  const color    = getHeatColor(lib.occupancy)
+  const label    = getOccupancyLabel(lib.occupancy)
+  const open     = isLibOpen(lib.openingTime, lib.closingTime)
+  const hours    = formatHours(lib.openingTime, lib.closingTime)
+  const canReport = open !== false
 
-  const color = getHeatColor(lib.occupancy)
-  const label = getOccupancyLabel(lib.occupancy)
-
-  if (view === 'success') {
-    return <SuccessView onClose={onClose} />
-  }
-
+  if (view === 'success') return <SuccessView onClose={onClose} />
   if (view === 'report') {
     return (
       <ReportView
         lib={lib}
         onBack={() => setView('detail')}
         onConfirm={async (rating) => {
-          await onReport(lib.id, rating) // lève une erreur si Airtable KO
+          await onReport(lib.id, rating)
           setView('success')
         }}
       />
     )
   }
 
-  /* Vue détail */
-  const open = isLibOpen(lib.openingTime, lib.closingTime)
-  const hours = formatHours(lib.openingTime, lib.closingTime)
-  const canReport = open !== false   // true si ouvert ou horaires inconnus
-
   return (
     <div className="pb-8">
 
-      {/* ── Hero image avec overlays ─────────────────────────────── */}
-      <div className="relative w-full h-52 overflow-hidden rounded-t-3xl">
+      {/* ── Hero image ────────────────────────────────────────────── */}
+      <div className="relative w-full h-52 overflow-hidden rounded-t-[32px]">
 
-        {/* Image ou placeholder */}
         {lib.imageUrl ? (
-          <img
-            src={lib.imageUrl}
-            alt={lib.name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none'
-              e.currentTarget.nextSibling.style.display = 'flex'
-            }}
-          />
+          <img src={lib.imageUrl} alt={lib.name}
+               className="w-full h-full object-cover"
+               onError={(e) => {
+                 e.currentTarget.style.display = 'none'
+                 e.currentTarget.nextSibling.style.display = 'flex'
+               }} />
         ) : null}
         <div style={{ display: lib.imageUrl ? 'none' : 'flex' }} className="w-full h-full">
           <PlaceholderImage type={lib.type} />
         </div>
 
-        {/* Dégradé du bas — pour texte lisible */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
+        {/* Dégradé bas */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-        {/* Poignée drag */}
+        {/* Handle bar */}
         <div className="absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
-          <div className="w-10 h-1 rounded-full bg-white/50" />
+          <div className="w-9 h-1 rounded-full bg-white/50" />
         </div>
 
-        {/* Badge ouvert/fermé — top left */}
+        {/* Badge ouvert/fermé */}
         <div className="absolute top-3 left-3">
           <OpenBadge openingTime={lib.openingTime} closingTime={lib.closingTime} />
         </div>
 
-        {/* Bouton fermeture — top right */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 w-7 h-7 rounded-full
-                     bg-black/30 backdrop-blur-sm flex items-center justify-center
-                     text-white text-sm hover:bg-black/50 transition-colors"
-        >
+        {/* Bouton fermeture */}
+        <button onClick={onClose}
+          className="absolute top-3 right-3 w-8 h-8 rounded-full
+                     flex items-center justify-center text-white text-sm
+                     transition-colors"
+          style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}>
           ✕
         </button>
 
-        {/* Nom + Vibe superposés sur le bas de l'image */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3">
+        {/* Titre + vibe sur l'image */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
           {lib.vibe && (
-            <p className="text-white/75 text-xs font-medium mb-0.5 tracking-wide">
-              {lib.vibe}
-            </p>
+            <p className="text-white/70 text-xs font-medium mb-1 tracking-wide">{lib.vibe}</p>
           )}
-          <h2 className="text-white text-xl font-bold leading-tight drop-shadow">
+          <h2 className="text-white text-xl font-bold leading-tight tracking-tight drop-shadow-lg">
             {lib.name}
           </h2>
         </div>
       </div>
 
-      {/* ── Contenu ─────────────────────────────────────────────── */}
-      <div className="px-4 pt-3">
+      {/* ── Contenu ───────────────────────────────────────────────── */}
+      <div className="px-4 pt-4">
 
-        {/* Badges : type + fraîcheur signalement */}
-        <div className="flex flex-wrap items-center gap-2 mb-3">
+        {/* Badges */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           {lib.type && <TypeBadge type={lib.type} />}
           {lib.lastUpdated ? (
             <span className={`inline-flex items-center gap-1 text-xs font-medium
                               rounded-full px-2.5 py-0.5 border
               ${isStale(lib.lastUpdated)
-                ? 'text-gray-400 bg-gray-100 border-gray-200'
-                : 'text-green-700 bg-green-50 border-green-200'}`}>
+                ? 'text-slate-400 bg-slate-50 border-slate-200'
+                : 'text-emerald-700 bg-emerald-50 border-emerald-200'}`}>
               {isStale(lib.lastUpdated) ? '🕐' : '🟢'} {formatTimeAgo(lib.lastUpdated)}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-xs font-medium
-                             text-gray-400 bg-gray-100 border border-gray-200
+                             text-slate-400 bg-slate-50 border border-slate-200
                              rounded-full px-2.5 py-0.5">
               🕐 Aucun signalement
             </span>
@@ -421,75 +366,73 @@ function LibrarySheet({ lib, onClose, onReport }) {
           )}
         </div>
 
-        {/* ── Infos pratiques ─────────────────────────────────── */}
-        <div className="rounded-2xl bg-gray-50 border border-gray-100 divide-y divide-gray-100 mb-4">
+        {/* Infos pratiques — carte glassmorphism */}
+        <div className="rounded-2xl overflow-hidden divide-y divide-slate-100/80 mb-4"
+             style={{ background: 'rgba(248,250,252,0.85)', border: '1px solid rgba(226,232,240,0.7)' }}>
 
-          {/* Adresse cliquable → Google Maps */}
           {lib.address && (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lib.address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-start gap-3 px-4 py-3 hover:bg-gray-100 transition-colors rounded-t-2xl"
-            >
-              <MapPin size={15} className="mt-0.5 shrink-0 text-blue-500" />
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Adresse</p>
-                <p className="text-sm text-gray-700 leading-snug">{lib.address}</p>
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lib.address)}`}
+               target="_blank" rel="noopener noreferrer"
+               className="flex items-start gap-3 px-4 py-3 hover:bg-slate-100/60 transition-colors">
+              <MapPin size={14} className="mt-0.5 shrink-0 text-blue-500" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Adresse</p>
+                <p className="text-sm text-slate-700 leading-snug">{lib.address}</p>
               </div>
-              <span className="ml-auto text-gray-300 text-xs self-center">↗</span>
+              <span className="text-slate-300 text-xs self-center shrink-0">↗</span>
             </a>
           )}
 
-          {/* Horaires */}
           {hours && (
             <div className="flex items-center gap-3 px-4 py-3">
-              <Clock size={15} className="shrink-0 text-blue-500" />
+              <Clock size={14} className="shrink-0 text-blue-500" />
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Horaires</p>
-                <p className="text-sm text-gray-700">{hours}</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Horaires</p>
+                <p className="text-sm text-slate-700">{hours}</p>
               </div>
             </div>
           )}
 
-          {/* Highlight / points forts */}
           {lib.highlight && (
-            <div className="flex items-start gap-3 px-4 py-3 rounded-b-2xl">
-              <Star size={15} className="mt-0.5 shrink-0 text-amber-400" />
+            <div className="flex items-start gap-3 px-4 py-3">
+              <Star size={14} className="mt-0.5 shrink-0 text-amber-400" />
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Points forts</p>
-                <p className="text-sm text-gray-700 leading-snug">{lib.highlight}</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Points forts</p>
+                <p className="text-sm text-slate-700 leading-snug">{lib.highlight}</p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Indicateur de remplissage */}
+        {/* Barre d'occupation */}
         <div className="mb-5">
           <div className="flex justify-between items-baseline mb-1.5">
-            <span className="text-sm font-semibold text-gray-700">{lib.occupancy}% rempli</span>
-            <span className="text-sm font-medium" style={{ color }}>{label}</span>
+            <span className="text-sm font-semibold text-slate-700">{lib.occupancy}% rempli</span>
+            <span className="text-sm font-semibold" style={{ color }}>{label}</span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-            <div
-              className="h-3 rounded-full transition-all duration-500"
-              style={{ width: `${lib.occupancy}%`, background: color }}
-            />
+          <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+            <div className="h-2.5 rounded-full transition-all duration-500"
+                 style={{ width: `${lib.occupancy}%`, background: color }} />
           </div>
-          <div className="flex justify-between text-xs text-gray-300 mt-1">
+          <div className="flex justify-between text-xs text-slate-300 mt-1">
             <span>Vide</span><span>Complet</span>
           </div>
         </div>
 
-        {/* Bouton signalement — désactivé si fermé */}
+        {/* Bouton signalement */}
         <button
           onClick={canReport ? () => setView('report') : undefined}
           disabled={!canReport}
-          className={`w-full font-semibold text-base rounded-2xl py-4 transition-colors
-            ${canReport
-              ? 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-md shadow-blue-200'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
+          className="w-full font-semibold text-base rounded-2xl py-4 transition-all duration-200"
+          style={canReport ? {
+            background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+            color: 'white',
+            boxShadow: '0 8px 30px rgba(59,130,246,0.30), 0 2px 8px rgba(59,130,246,0.20)',
+          } : {
+            background: 'rgba(241,245,249,0.9)',
+            color: '#94a3b8',
+            cursor: 'not-allowed',
+          }}
         >
           {canReport ? 'Signaler le niveau de place' : '🔒 Lieu fermé — pas de signalement'}
         </button>
@@ -499,13 +442,12 @@ function LibrarySheet({ lib, onClose, onReport }) {
   )
 }
 
-/* ─── App ───────────────────────────────────────────────────────── */
+/* ─── App ────────────────────────────────────────────────────────── */
 export default function App() {
-  const { libraries, loading, error, isMock, report } = useStudySpots()
-  const [showList, setShowList]       = useState(false)
+  const { libraries, loading, isMock, report } = useStudySpots()
+  const [showList,    setShowList]    = useState(false)
   const [selectedLib, setSelectedLib] = useState(null)
 
-  // Sync selectedLib quand les données Airtable arrivent / sont mises à jour
   useEffect(() => {
     if (!selectedLib) return
     const updated = libraries.find((l) => l.id === selectedLib.id)
@@ -517,31 +459,26 @@ export default function App() {
     setSelectedLib(lib)
   }
 
-  async function handleReport(libId, rating) {
-    await report(libId, rating)
-  }
-
-  /* ── Écran de chargement ──────────────────────────────────────── */
+  /* Chargement */
   if (loading) {
     return (
       <div className="h-screen w-full max-w-lg mx-auto flex flex-col items-center
-                      justify-center gap-3 bg-gray-50">
-        <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent
-                        animate-spin" />
-        <p className="text-sm text-gray-400">Chargement des spots…</p>
+                      justify-center gap-3 bg-slate-50">
+        <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+        <p className="text-sm text-slate-400 font-medium">Chargement des spots…</p>
       </div>
     )
   }
 
   return (
-    <div className="relative h-screen w-full max-w-lg mx-auto overflow-hidden bg-gray-100">
+    <div className="relative h-screen w-full max-w-lg mx-auto overflow-hidden bg-slate-100">
 
       {/* Carte plein écran */}
       <div className="absolute inset-0">
         <Map libraries={libraries} onSelect={handleSelectLib} />
       </div>
 
-      {/* Bannière mode démo — uniquement en développement local */}
+      {/* Bannière démo — local uniquement */}
       {isMock && import.meta.env.DEV && (
         <div className="absolute top-0 left-0 right-0 z-[1002] bg-amber-400/90
                         backdrop-blur-sm text-amber-900 text-xs font-medium
@@ -550,34 +487,34 @@ export default function App() {
         </div>
       )}
 
-      {/* Barre flottante */}
+      {/* ── Nav flottante glassmorphism ─────────────────────────── */}
       <nav className={`absolute left-4 right-4 z-[1000] flex items-center justify-between
-                      bg-white/60 backdrop-blur-md rounded-2xl px-5 py-3
-                      shadow-lg border border-white/50
-                      ${isMock ? 'top-10' : 'top-4'}`}>
+                       glass rounded-2xl px-5 py-3 shadow-xl shadow-black/5
+                       ${isMock && import.meta.env.DEV ? 'top-10' : 'top-4'}`}>
         <div>
-          <h1 className="font-bold text-gray-900 text-lg tracking-tight leading-none">
+          <h1 className="font-bold text-slate-900 text-lg tracking-tight leading-none">
             StudySpot AMS
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">{libraries.length} lieux</p>
+          <p className="text-xs text-slate-400 mt-0.5 font-medium">{libraries.length} lieux</p>
         </div>
         <button
           onClick={() => { setShowList((v) => !v); setSelectedLib(null) }}
-          className="px-4 py-1.5 rounded-full text-sm font-semibold
-                     bg-gray-900 text-white hover:bg-gray-700 transition-colors"
+          className="px-4 py-2 rounded-full text-sm font-semibold transition-all
+                     bg-slate-900 text-white hover:bg-slate-700 active:scale-95"
         >
           {showList ? '✕ Fermer' : '☰ Liste'}
         </button>
       </nav>
 
-      {/* ── Panneau liste ─────────────────────────────────────────── */}
+      {/* ── Panneau liste ──────────────────────────────────────────── */}
       <AnimatePresence>
         {showList && !selectedLib && (
           <motion.div
             key="list-sheet"
             className="absolute bottom-0 left-0 right-0 z-[1000]
-                       bg-white/90 backdrop-blur-md rounded-t-3xl shadow-2xl
-                       max-h-[65vh] overflow-y-auto"
+                       rounded-t-[32px] shadow-2xl max-h-[65vh] overflow-y-auto"
+            style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(24px)',
+                     WebkitBackdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.4)' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -585,37 +522,35 @@ export default function App() {
             drag="y"
             dragConstraints={{ top: 0 }}
             dragElastic={{ top: 0, bottom: 0.3 }}
-            onDragEnd={(_, info) => {
-              if (info.offset.y > 80) setShowList(false)
-            }}
+            onDragEnd={(_, info) => { if (info.offset.y > 80) setShowList(false) }}
           >
             <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
-              <div className="w-10 h-1 rounded-full bg-gray-300" />
+              <div className="w-9 h-1 rounded-full bg-slate-200" />
             </div>
             <LibraryList libraries={libraries} onSelect={handleSelectLib} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Bottom sheet détail + signalement ─────────────────────── */}
+      {/* ── Bottom sheet détail ─────────────────────────────────────── */}
       <AnimatePresence>
         {selectedLib && (
           <>
-            {/* Fond semi-transparent cliquable */}
             <motion.div
               key="backdrop"
-              className="absolute inset-0 z-[1000] bg-black/20"
+              className="absolute inset-0 z-[1000]"
+              style={{ background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(2px)' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setSelectedLib(null)}
             />
-
             <motion.div
               key="detail-sheet"
               className="absolute bottom-0 left-0 right-0 z-[1001]
-                         bg-white rounded-t-3xl shadow-2xl"
+                         rounded-t-[32px] shadow-2xl"
+              style={{ background: 'rgba(255,255,255,0.97)' }}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -623,15 +558,13 @@ export default function App() {
               drag="y"
               dragConstraints={{ top: 0 }}
               dragElastic={{ top: 0, bottom: 0.3 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100) setSelectedLib(null)
-              }}
+              onDragEnd={(_, info) => { if (info.offset.y > 100) setSelectedLib(null) }}
               onClick={(e) => e.stopPropagation()}
             >
               <LibrarySheet
                 lib={selectedLib}
                 onClose={() => setSelectedLib(null)}
-                onReport={handleReport}
+                onReport={report}
               />
             </motion.div>
           </>

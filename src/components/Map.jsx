@@ -24,11 +24,11 @@ function isStale(lastUpdated) {
 
 /* ── Génère un DivIcon "photo circulaire" avec bordure couleur affluence ── */
 function createMarkerIcon({ color, imageUrl, type, isSelected = false }) {
-  const size   = isSelected ? 40 : 32
+  const size   = 34   // taille fixe — pas de grossissement au clic
   const half   = size / 2
   const border = isSelected ? 3 : 2
   const shadow = isSelected
-    ? `0 4px 16px rgba(0,0,0,0.25), 0 0 0 2px white, 0 0 0 ${border + 2}px ${color}`
+    ? `0 4px 14px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.12)`
     : `0 3px 10px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)`
   const innerSize = size - border * 2 - 2  // photo area inside border + 1px gap
 

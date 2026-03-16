@@ -32,11 +32,13 @@ function createMarkerIcon({ color, imageUrl, type, name = '', isSelected = false
     : `0 3px 10px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)`
   const innerSize = size - border * 2 - 2
 
-  const isCafe = (type ?? '').toLowerCase().includes('caf')
-  const fallbackBg = isCafe
-    ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
-    : 'linear-gradient(135deg,#eff6ff,#dbeafe)'
-  const fallbackEmoji = isCafe ? '☕' : '📚'
+  const t = (type ?? '').toLowerCase()
+  const isCafe      = t.includes('caf')
+  const isWorkspace = t.includes('workspace') || t.includes('cowork')
+  const fallbackBg = isCafe      ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
+                   : isWorkspace ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)'
+                   :               'linear-gradient(135deg,#eff6ff,#dbeafe)'
+  const fallbackEmoji = isCafe ? '☕' : isWorkspace ? '💻' : '📚'
 
   const inner = imageUrl
     ? `<img src="${imageUrl}" style="width:${innerSize}px;height:${innerSize}px;border-radius:50%;object-fit:cover;display:block;" />`

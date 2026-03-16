@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star, BookOpen, Coffee, Zap, Lock } from 'lucide-react'
+import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star, BookOpen, Coffee, Zap, Lock, Monitor } from 'lucide-react'
 import { isLibOpen, formatHours } from './utils/time'
 import BottomNav from './components/BottomNav'
 import ExploreTab from './components/tabs/ExploreTab'
@@ -83,14 +83,21 @@ function OpenBadge({ openingTime, closingTime }) {
 }
 
 /* ─── Placeholder image ──────────────────────────────────────────── */
+function typeIs(type, ...keywords) {
+  const t = (type ?? '').toLowerCase()
+  return keywords.some(k => t.includes(k))
+}
+
 function PlaceholderImage({ type }) {
-  const isCafe = type === 'Café'
+  const isCafe      = typeIs(type, 'caf')
+  const isWorkspace = typeIs(type, 'workspace', 'cowork')
+  const bg = isCafe      ? 'bg-gradient-to-br from-amber-50 via-amber-100 to-orange-100'
+           : isWorkspace ? 'bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50'
+           :               'bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100'
+  const emoji = isCafe ? '☕' : isWorkspace ? '💻' : '📚'
   return (
-    <div className={`w-full h-full flex flex-col items-center justify-center gap-2
-      ${isCafe
-        ? 'bg-gradient-to-br from-amber-50 via-amber-100 to-orange-100'
-        : 'bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100'}`}>
-      <span className="text-5xl select-none">{isCafe ? '☕' : '📚'}</span>
+    <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${bg}`}>
+      <span className="text-5xl select-none">{emoji}</span>
       <span className="text-xs font-semibold text-slate-400 tracking-widest uppercase">
         {type ?? 'Lieu'}
       </span>
@@ -100,14 +107,14 @@ function PlaceholderImage({ type }) {
 
 /* ─── Badge type ─────────────────────────────────────────────────── */
 function TypeBadge({ type }) {
-  const isCafe = type === 'Café'
-  const Icon = isCafe ? Coffee : BookOpen
+  const isCafe      = typeIs(type, 'caf')
+  const isWorkspace = typeIs(type, 'workspace', 'cowork')
+  const Icon = isCafe ? Coffee : isWorkspace ? Monitor : BookOpen
+  const cls  = isCafe      ? 'bg-amber-50 text-amber-700 border-amber-200/80'
+             : isWorkspace ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+             :               'bg-blue-50 text-blue-700 border-blue-200/80'
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-semibold
-                      rounded-full px-2.5 py-0.5 border
-      ${isCafe
-        ? 'bg-amber-50 text-amber-700 border-amber-200/80'
-        : 'bg-blue-50  text-blue-700  border-blue-200/80'}`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-0.5 border ${cls}`}>
       <Icon size={11} strokeWidth={2} />
       {type ?? 'Lieu'}
     </span>

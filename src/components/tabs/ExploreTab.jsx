@@ -1,16 +1,22 @@
 import { useState, useMemo } from 'react'
-import { Sparkles, Circle, VolumeX, Coffee, BookOpen, User, ChevronRight } from 'lucide-react'
+import { Sparkles, Circle, VolumeX, Coffee, BookOpen, User, ChevronRight, Monitor } from 'lucide-react'
 import { isLibOpen } from '../../utils/time'
 import { useUser } from '../../context/UserContext'
 import { useLanguage } from '../../context/LanguageContext'
 
 const FILTERS = [
-  { id: 'all',     key: 'filterAll',     Icon: () => <Sparkles size={13} strokeWidth={2} /> },
-  { id: 'open',    key: 'filterOpen',    Icon: () => <Circle   size={8}  fill="#22c55e" stroke="none" /> },
-  { id: 'quiet',   key: 'filterQuiet',   Icon: () => <VolumeX  size={13} strokeWidth={2} /> },
-  { id: 'cafe',    key: 'filterCafe',    Icon: () => <Coffee   size={13} strokeWidth={2} /> },
-  { id: 'library', key: 'filterLibrary', Icon: () => <BookOpen size={13} strokeWidth={2} /> },
+  { id: 'all',       key: 'filterAll',       Icon: () => <Sparkles size={13} strokeWidth={2} /> },
+  { id: 'open',      key: 'filterOpen',      Icon: () => <Circle   size={8}  fill="#22c55e" stroke="none" /> },
+  { id: 'quiet',     key: 'filterQuiet',     Icon: () => <VolumeX  size={13} strokeWidth={2} /> },
+  { id: 'cafe',      key: 'filterCafe',      Icon: () => <Coffee   size={13} strokeWidth={2} /> },
+  { id: 'workspace', key: 'filterWorkspace', Icon: () => <Monitor  size={13} strokeWidth={2} /> },
+  { id: 'library',   key: 'filterLibrary',   Icon: () => <BookOpen size={13} strokeWidth={2} /> },
 ]
+
+function typeIs(type, ...keywords) {
+  const t = (type ?? '').toLowerCase()
+  return keywords.some(k => t.includes(k))
+}
 
 /* ── Couleurs sémantiques par niveau ───────────────────────────── */
 function getOccupancyMeta(occupancy) {
@@ -57,18 +63,18 @@ function OpenDot({ open, t }) {
 
 /* ── Placeholder image (caché si imageUrl existe) ──────────────── */
 function Placeholder({ type, imageUrl }) {
-  const isCafe = type === 'Café'
+  const isCafe      = typeIs(type, 'caf')
+  const isWorkspace = typeIs(type, 'workspace', 'cowork')
+  const bg = isCafe      ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
+           : isWorkspace ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)'
+           :               'linear-gradient(135deg,#eff6ff,#dbeafe)'
+  const emoji = isCafe ? '☕' : isWorkspace ? '💻' : '📚'
   return (
     <div
       className="absolute inset-0 items-center justify-center text-2xl"
-      style={{
-        display: imageUrl ? 'none' : 'flex',
-        background: isCafe
-          ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
-          : 'linear-gradient(135deg,#eff6ff,#dbeafe)',
-      }}
+      style={{ display: imageUrl ? 'none' : 'flex', background: bg }}
     >
-      {isCafe ? '☕' : '📚'}
+      {emoji}
     </div>
   )
 }
@@ -121,7 +127,8 @@ function NearbyCard({ lib, onSelect, t }) {
 
 /* ── Carte "Les plus disponibles" (format liste) ──────────────── */
 function TrendingCard({ lib, onSelect, rank, t }) {
-  const isCafe = lib.type === 'Café'
+  const isCafe      = typeIs(lib.type, 'caf')
+  const isWorkspace = typeIs(lib.type, 'workspace', 'cowork')
   const open   = isLibOpen(lib.openingTime, lib.closingTime)
 
   return (
@@ -156,12 +163,12 @@ function TrendingCard({ lib, onSelect, rank, t }) {
           className="absolute inset-0 items-center justify-center text-lg"
           style={{
             display: lib.imageUrl ? 'none' : 'flex',
-            background: isCafe
-              ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
-              : 'linear-gradient(135deg,#eff6ff,#dbeafe)',
+            background: isCafe      ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
+                      : isWorkspace ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)'
+                      :               'linear-gradient(135deg,#eff6ff,#dbeafe)',
           }}
         >
-          {isCafe ? '☕' : '📚'}
+          {isCafe ? '☕' : isWorkspace ? '💻' : '📚'}
         </div>
       </div>
 
@@ -205,10 +212,11 @@ export default function ExploreTab({ libraries, onSelect }) {
       if (activeFilter === 'quiet')
         return (lib.vibe ?? '').toLowerCase().includes('silence') || (lib.occupancy ?? 50) < 35
       if (activeFilter === 'cafe')
-        return lib.type === 'Café'
+        return typeIs(lib.type, 'caf')
+      if (activeFilter === 'workspace')
+        return typeIs(lib.type, 'workspace', 'cowork')
       if (activeFilter === 'library')
-        return (lib.type ?? '').toLowerCase().includes('librar') ||
-               (lib.type ?? '').toLowerCase().includes('biblioth')
+        return typeIs(lib.type, 'librar', 'biblioth')
       return true
     })
   }, [libraries, activeFilter])

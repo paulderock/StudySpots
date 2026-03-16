@@ -33,8 +33,14 @@ function OccupancyGauge({ occupancy }) {
 }
 
 /* ── Carte Uber Eats style ────────────────────────────────────── */
+function typeIs(type, ...keywords) {
+  const t = (type ?? '').toLowerCase()
+  return keywords.some(k => t.includes(k))
+}
+
 function LibCard({ lib, onSelect, t }) {
-  const isCafe = lib.type === 'Café'
+  const isCafe      = typeIs(lib.type, 'caf')
+  const isWorkspace = typeIs(lib.type, 'workspace', 'cowork')
   const open   = isLibOpen(lib.openingTime, lib.closingTime)
 
   return (
@@ -59,12 +65,12 @@ function LibCard({ lib, onSelect, t }) {
           className="absolute inset-0 items-center justify-center text-xl"
           style={{
             display: lib.imageUrl ? 'none' : 'flex',
-            background: isCafe
-              ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
-              : 'linear-gradient(135deg,#eff6ff,#dbeafe)',
+            background: isCafe      ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
+                      : isWorkspace ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)'
+                      :               'linear-gradient(135deg,#eff6ff,#dbeafe)',
           }}
         >
-          {isCafe ? '☕' : '📚'}
+          {isCafe ? '☕' : isWorkspace ? '💻' : '📚'}
         </div>
       </div>
 

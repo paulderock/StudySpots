@@ -44,7 +44,7 @@ export const translations = {
     // Explore
     greeting:       (name) => `Salut, ${name} !`,
     filterAll: 'Tous', filterOpen: 'Ouvert', filterQuiet: 'Calme',
-    filterCafe: 'Café', filterLibrary: 'Librairie',
+    filterCafe: 'Café', filterLibrary: 'Librairie', filterWorkspace: 'Workspace',
     noPlaces:       'Aucun lieu pour ce filtre',
     tryFilter:      'Essaie un autre filtre ci-dessus',
     nearby:         'À proximité',
@@ -147,7 +147,7 @@ export const translations = {
     backToMap:      'Back to map',
     greeting:       (name) => `Hey, ${name}!`,
     filterAll: 'All', filterOpen: 'Open', filterQuiet: 'Quiet',
-    filterCafe: 'Café', filterLibrary: 'Library',
+    filterCafe: 'Café', filterLibrary: 'Library', filterWorkspace: 'Workspace',
     noPlaces:       'No places for this filter',
     tryFilter:      'Try another filter above',
     nearby:         'Nearby',

@@ -66,6 +66,15 @@ export function AuthProvider({ children }) {
     return true
   }
 
+  async function signInWithGoogle() {
+    setError(null)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+    if (error) setError(translateError(error.message))
+  }
+
   async function signOut() {
     await supabase?.auth.signOut()
     setSession(null)
@@ -82,6 +91,7 @@ export function AuthProvider({ children }) {
       setError,
       signUp,
       signIn,
+      signInWithGoogle,
       signOut,
     }}>
       {children}

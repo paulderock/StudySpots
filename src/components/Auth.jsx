@@ -148,10 +148,10 @@ export default function Auth() {
         style={{ backgroundImage: "url('/bg-library.jpg')", filter: 'brightness(0.80)' }}
       />
 
-      {/* Layer 2 — Forest deep colour wash (#153462) to unify the palette */}
+      {/* Layer 2 — Forest green wash to unify the palette */}
       <div
         className="absolute inset-0"
-        style={{ background: 'rgba(21,52,98,0.52)' }}
+        style={{ background: 'rgba(28,58,46,0.58)' }}
       />
 
       {/* Layer 3 — Centered card */}

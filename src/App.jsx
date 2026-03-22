@@ -12,20 +12,27 @@ import { UserProvider, useUser } from './context/UserContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { LanguageProvider, useLanguage } from './context/LanguageContext'
 
-/* ─── Config notation (labels injectés via t() au moment du rendu) ── */
+/* ─── Palette unifiée ────────────────────────────────────────────── */
+const FD  = '#1C3A2E'   // Forest Deep  (vert profond mat)
+const FL  = '#4A8C82'   // Forest Light (vert forêt)
+const SAG = '#6BA89A'   // Sage         (sauge mat)
+const CRM = '#F0EFD8'   // Cream        (crème chaud)
+const BG  = '#F5F5F0'   // Background   (fond app)
+
+/* ─── Config notation ────────────────────────────────────────────── */
 const RATINGS_BASE = [
-  { value: 1, key: 'rating1', color: '#10b981', pastel: '#d1fae5', glow: '#10b98140' },
-  { value: 2, key: 'rating2', color: '#34d399', pastel: '#d1fae5', glow: '#34d39940' },
-  { value: 3, key: 'rating3', color: '#f59e0b', pastel: '#fef3c7', glow: '#f59e0b40' },
-  { value: 4, key: 'rating4', color: '#f97316', pastel: '#ffedd5', glow: '#f9731640' },
-  { value: 5, key: 'rating5', color: '#ef4444', pastel: '#fee2e2', glow: '#ef444440' },
+  { value: 1, key: 'rating1', color: '#4A8C82', pastel: '#e8f4f2', glow: '#4A8C8230' },
+  { value: 2, key: 'rating2', color: '#6BA89A', pastel: '#eef6f4', glow: '#6BA89A30' },
+  { value: 3, key: 'rating3', color: '#d4a843', pastel: '#fdf5dc', glow: '#d4a84330' },
+  { value: 4, key: 'rating4', color: '#e07c3a', pastel: '#fdf0e6', glow: '#e07c3a30' },
+  { value: 5, key: 'rating5', color: '#c9433a', pastel: '#fdecea', glow: '#c9433a30' },
 ]
 
 /* ─── Helpers ────────────────────────────────────────────────────── */
 function getHeatColor(occupancy) {
-  if (occupancy >= 70) return '#ef4444'
-  if (occupancy >= 40) return '#f59e0b'
-  return '#10b981'
+  if (occupancy >= 70) return '#c9433a'
+  if (occupancy >= 40) return '#d4a843'
+  return '#4A8C82'
 }
 function getOccupancyLabel(occupancy, t) {
   if (occupancy >= 80) return t('occupancyVeryBusy')
@@ -91,15 +98,17 @@ function typeIs(type, ...keywords) {
 function PlaceholderImage({ type }) {
   const isCafe      = typeIs(type, 'caf')
   const isWorkspace = typeIs(type, 'workspace', 'cowork')
-  const bg = isCafe      ? 'bg-gradient-to-br from-amber-50 via-amber-100 to-orange-100'
-           : isWorkspace ? 'bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50'
-           :               'bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100'
+  const bg = isCafe      ? `linear-gradient(135deg,${CRM},#e4e396)`
+           : isWorkspace ? `linear-gradient(135deg,${SAG}30,${FL}25)`
+           :               `linear-gradient(135deg,${FD}12,${FL}18)`
   const emoji = isCafe ? '☕' : isWorkspace ? '💻' : '📚'
   return (
-    <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${bg}`}>
+    <div className="w-full h-full flex flex-col items-center justify-center gap-2"
+         style={{ background: bg }}>
       <span className="text-5xl select-none">{emoji}</span>
-      <span className="text-xs font-semibold text-slate-400 tracking-widest uppercase">
-        {type ?? 'Lieu'}
+      <span className="text-xs font-semibold tracking-widest uppercase"
+            style={{ color: `${FD}60` }}>
+        {type ?? 'Spot'}
       </span>
     </div>
   )
@@ -109,14 +118,15 @@ function PlaceholderImage({ type }) {
 function TypeBadge({ type }) {
   const isCafe      = typeIs(type, 'caf')
   const isWorkspace = typeIs(type, 'workspace', 'cowork')
-  const Icon = isCafe ? Coffee : isWorkspace ? Monitor : BookOpen
-  const cls  = isCafe      ? 'bg-amber-50 text-amber-700 border-amber-200/80'
-             : isWorkspace ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
-             :               'bg-blue-50 text-blue-700 border-blue-200/80'
+  const Icon   = isCafe ? Coffee : isWorkspace ? Monitor : BookOpen
+  const color  = isCafe ? '#7a6030' : FL
+  const pastBg = isCafe ? `${CRM}` : `${SAG}18`
+  const border = isCafe ? `rgba(180,150,60,0.30)` : `${SAG}50`
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-0.5 border ${cls}`}>
+    <span className="inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-0.5"
+          style={{ color, background: pastBg, border: `1px solid ${border}` }}>
       <Icon size={11} strokeWidth={2} />
-      {type ?? 'Lieu'}
+      {type ?? 'Spot'}
     </span>
   )
 }
@@ -147,8 +157,8 @@ function ReportView({ lib, onConfirm, onBack }) {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={onBack} disabled={submitting}
-          className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center
-                     text-slate-500 hover:bg-slate-200 transition-colors disabled:opacity-40">
+          className="w-9 h-9 rounded-full flex items-center justify-center transition-colors disabled:opacity-40"
+          style={{ background: `${SAG}18`, color: FD }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 5l-7 7 7 7"/>
@@ -229,11 +239,11 @@ function ReportView({ lib, onConfirm, onBack }) {
         className="w-full font-semibold text-base rounded-2xl py-4
                    flex items-center justify-center gap-2 transition-all duration-200"
         style={rating && !submitting ? {
-          background: 'linear-gradient(135deg, #4FA095 0%, #153462 100%)',
-          color: '#F6F6C9',
-          boxShadow: '0 8px 30px rgba(79,160,149,0.35), 0 2px 8px rgba(21,52,98,0.20)',
+          background: FD,
+          color: CRM,
+          boxShadow: `0 6px 20px ${FD}40`,
         } : {
-          background: 'rgba(241,245,249,0.9)',
+          background: `${FD}10`,
           color: '#94a3b8',
           cursor: 'not-allowed',
         }}
@@ -256,21 +266,20 @@ function SuccessView({ onClose }) {
   const { t } = useLanguage()
   return (
     <div className="px-5 pt-6 pb-10 flex flex-col items-center text-center">
-      <div className="check-pop w-20 h-20 rounded-full flex items-center
-                      justify-center mb-5"
-           style={{ background: 'rgba(138,209,194,0.12)', border: '2px solid rgba(138,209,194,0.35)' }}>
+      <div className="check-pop w-20 h-20 rounded-full flex items-center justify-center mb-5"
+           style={{ background: `${SAG}15`, border: `2px solid ${SAG}40` }}>
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
           <path className="draw-check" d="M8 21 L17 30 L33 12"
-                stroke="#8AD1C2" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+                stroke={SAG} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
-      <h2 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">{t('successTitle')}</h2>
-      <p className="text-sm text-slate-500 mb-1">{t('successBody')}</p>
-      <p className="text-xs text-slate-400 mb-2">{t('successRT')}</p>
-      <p className="text-xs font-bold mb-8" style={{ color: '#4FA095' }}>{t('successPts')}</p>
+      <h2 className="text-xl font-bold mb-2 tracking-tight" style={{ color: FD }}>{t('successTitle')}</h2>
+      <p className="text-sm mb-1" style={{ color: '#64748b' }}>{t('successBody')}</p>
+      <p className="text-xs mb-2" style={{ color: '#94a3b8' }}>{t('successRT')}</p>
+      <p className="text-xs font-bold mb-8" style={{ color: FL }}>{t('successPts')}</p>
       <button onClick={onClose}
-        className="px-8 py-3 rounded-2xl bg-slate-900 text-white
-                   font-semibold text-sm hover:bg-slate-700 transition-colors">
+        className="px-8 py-3 rounded-2xl font-semibold text-sm transition-colors"
+        style={{ background: FD, color: CRM }}>
         {t('backToMap')}
       </button>
     </div>
@@ -300,25 +309,21 @@ function ReportButton({ onPress }) {
         className="btn-shimmer w-full flex items-center justify-center gap-3
                    text-white rounded-xl py-4 px-6"
         style={{
-          background: '#153462',
-          border: '1px solid rgba(138,209,194,0.20)',
-          boxShadow: '0 20px 40px rgba(21,52,98,0.30), 0 4px 8px rgba(0,0,0,0.15)',
+          background: FD,
+          border: `1px solid ${SAG}30`,
+          boxShadow: `0 8px 24px ${FD}35, 0 2px 6px rgba(0,0,0,0.10)`,
           fontSize: '0.875rem',
-          fontWeight: 500,
-          letterSpacing: '0.04em',
+          fontWeight: 600,
+          letterSpacing: '0.03em',
+          color: CRM,
         }}
       >
-        {/* Live dot conic gradient */}
-        <span
-          className="live-dot shrink-0"
-          style={{
-            width: 10, height: 10,
-            borderRadius: '50%',
-            background: 'conic-gradient(from 0deg, #6366f1, #3b82f6, #818cf8, #6366f1)',
-            boxShadow: '0 0 6px rgba(99,102,241,0.6)',
-            display: 'inline-block',
-          }}
-        />
+        {/* Live dot — sage pulsant */}
+        <span className="live-dot shrink-0" style={{
+          width: 8, height: 8, borderRadius: '50%',
+          background: SAG, display: 'inline-block',
+          boxShadow: `0 0 6px ${SAG}`,
+        }} />
         {t('reportBtnText')}
       </motion.button>
     </div>
@@ -416,51 +421,55 @@ function LibrarySheet({ lib, onClose, onReport }) {
                 : 'text-emerald-700 bg-emerald-50 border-emerald-200'}`}>
               {isStale(lib.lastUpdated)
                 ? <Clock size={11} strokeWidth={2} />
-                : <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
+                : <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: SAG }} />}
               {formatTimeAgo(lib.lastUpdated, t)}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs font-medium
-                             text-slate-400 bg-slate-50 border border-slate-200
-                             rounded-full px-2.5 py-0.5">
+            <span className="inline-flex items-center gap-1 text-xs font-medium rounded-full px-2.5 py-0.5"
+                  style={{ color: '#94a3b8', background: `${FD}08`, border: `1px solid rgba(0,0,0,0.07)` }}>
               <Clock size={11} strokeWidth={2} /> {t('noReport')}
             </span>
           )}
         </div>
 
         {/* Infos pratiques */}
-        <div className="rounded-2xl overflow-hidden divide-y divide-slate-100/80 mb-4"
-             style={{ background: 'rgba(248,250,252,0.85)', border: '1px solid rgba(226,232,240,0.7)' }}>
+        <div className="rounded-2xl overflow-hidden divide-y mb-4"
+             style={{ background: BG, border: `1px solid rgba(0,0,0,0.07)`, divideColor: 'rgba(0,0,0,0.05)' }}>
 
           {lib.address && (
             <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lib.address)}`}
                target="_blank" rel="noopener noreferrer"
-               className="flex items-start gap-3 px-4 py-3 hover:bg-slate-100/60 transition-colors">
-              <MapPin size={14} className="mt-0.5 shrink-0 text-blue-500" />
+               className="flex items-start gap-3 px-4 py-3 transition-colors"
+               style={{ borderBottom: `1px solid rgba(0,0,0,0.05)` }}>
+              <MapPin size={14} className="mt-0.5 shrink-0" style={{ color: SAG }} />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">{t('address')}</p>
-                <p className="text-sm text-slate-700 leading-snug">{lib.address}</p>
+                <p className="text-xs font-bold uppercase tracking-wider mb-0.5"
+                   style={{ color: `${FD}60` }}>{t('address')}</p>
+                <p className="text-sm leading-snug" style={{ color: FD }}>{lib.address}</p>
               </div>
-              <span className="text-slate-300 text-xs self-center shrink-0">↗</span>
+              <span className="text-xs self-center shrink-0" style={{ color: SAG }}>↗</span>
             </a>
           )}
 
           {hours && (
-            <div className="flex items-center gap-3 px-4 py-3">
-              <Clock size={14} className="shrink-0 text-blue-500" />
+            <div className="flex items-center gap-3 px-4 py-3"
+                 style={{ borderBottom: lib.highlight ? `1px solid rgba(0,0,0,0.05)` : 'none' }}>
+              <Clock size={14} className="shrink-0" style={{ color: SAG }} />
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">{t('hours')}</p>
-                <p className="text-sm text-slate-700">{hours}</p>
+                <p className="text-xs font-bold uppercase tracking-wider mb-0.5"
+                   style={{ color: `${FD}60` }}>{t('hours')}</p>
+                <p className="text-sm" style={{ color: FD }}>{hours}</p>
               </div>
             </div>
           )}
 
           {lib.highlight && (
             <div className="flex items-start gap-3 px-4 py-3">
-              <Star size={14} className="mt-0.5 shrink-0 text-amber-400" />
+              <Star size={14} className="mt-0.5 shrink-0" style={{ color: '#d4a843' }} />
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">{t('highlights')}</p>
-                <p className="text-sm text-slate-700 leading-snug">{lib.highlight}</p>
+                <p className="text-xs font-bold uppercase tracking-wider mb-0.5"
+                   style={{ color: `${FD}60` }}>{t('highlights')}</p>
+                <p className="text-sm leading-snug" style={{ color: FD }}>{lib.highlight}</p>
               </div>
             </div>
           )}
@@ -469,14 +478,14 @@ function LibrarySheet({ lib, onClose, onReport }) {
         {/* Barre d'occupation */}
         <div className="mb-5">
           <div className="flex justify-between items-baseline mb-1.5">
-            <span className="text-sm font-semibold text-slate-700">{t('percentFull', lib.occupancy)}</span>
-            <span className="text-sm font-semibold" style={{ color }}>{label}</span>
+            <span className="text-sm font-semibold" style={{ color: FD }}>{t('percentFull', lib.occupancy)}</span>
+            <span className="text-sm font-bold" style={{ color }}>{label}</span>
           </div>
-          <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-            <div className="h-2.5 rounded-full transition-all duration-500"
+          <div className="w-full rounded-full h-2 overflow-hidden" style={{ background: `${FD}12` }}>
+            <div className="h-2 rounded-full transition-all duration-500"
                  style={{ width: `${lib.occupancy}%`, background: color }} />
           </div>
-          <div className="flex justify-between text-xs text-slate-300 mt-1">
+          <div className="flex justify-between text-xs mt-1" style={{ color: `${FD}40` }}>
             <span>{t('empty')}</span><span>{t('full')}</span>
           </div>
         </div>
@@ -485,8 +494,9 @@ function LibrarySheet({ lib, onClose, onReport }) {
         {canReport ? (
           <ReportButton onPress={() => setView('report')} />
         ) : (
-          <div className="w-full flex items-center justify-center gap-2 rounded-full py-3.5
-                          bg-slate-100 text-slate-400 text-sm font-medium cursor-not-allowed">
+          <div className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5
+                          text-sm font-medium cursor-not-allowed"
+               style={{ background: `${FD}08`, color: `${FD}50` }}>
             <Lock size={14} strokeWidth={2} />
             {t('closedReport')}
           </div>
@@ -568,15 +578,16 @@ function AppInner() {
   if (loading) {
     return (
       <div className="h-screen w-full max-w-lg mx-auto flex flex-col items-center
-                      justify-center gap-3 bg-slate-50">
-        <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                      justify-center gap-3" style={{ background: BG }}>
+        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+             style={{ borderColor: `${SAG} transparent transparent transparent` }} />
         <p className="text-sm text-slate-400 font-medium">{t('loadingSpots')}</p>
       </div>
     )
   }
 
   return (
-    <div className="relative h-screen w-full max-w-lg mx-auto overflow-hidden bg-slate-50">
+    <div className="relative h-screen w-full max-w-lg mx-auto overflow-hidden" style={{ background: BG }}>
 
       {/* Bannière démo — local uniquement */}
       {showBanner && (

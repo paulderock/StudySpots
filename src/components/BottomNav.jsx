@@ -1,13 +1,15 @@
+import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
 
-const SAGE        = '#6BA89A'   // vert sauge mat désaturé
-const FOREST_DEEP = '#1C3A2E'  // vert profond mat
+const SAGE        = '#6BA89A'
+const FOREST_DEEP = '#1C3A2E'
 
 function IconExplore({ active }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-         stroke={active ? FOREST_DEEP : '#9CA3AF'}
-         strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+         stroke={active ? FOREST_DEEP : '#94a3b8'}
+         strokeWidth={active ? 2.2 : 1.8}
+         strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
       <polyline points="9 22 9 12 15 12 15 22"/>
     </svg>
@@ -16,9 +18,10 @@ function IconExplore({ active }) {
 
 function IconMap({ active }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-         stroke={active ? FOREST_DEEP : '#9CA3AF'}
-         strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+         stroke={active ? FOREST_DEEP : '#94a3b8'}
+         strokeWidth={active ? 2.2 : 1.8}
+         strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8"/>
       <path d="M21 21l-4.35-4.35"/>
     </svg>
@@ -27,9 +30,10 @@ function IconMap({ active }) {
 
 function IconProfile({ active }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-         stroke={active ? FOREST_DEEP : '#9CA3AF'}
-         strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+         stroke={active ? FOREST_DEEP : '#94a3b8'}
+         strokeWidth={active ? 2.2 : 1.8}
+         strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
       <circle cx="12" cy="7" r="4"/>
     </svg>
@@ -44,39 +48,49 @@ const TABS = [
 
 export default function BottomNav({ active, onChange }) {
   const { t } = useLanguage()
+
   return (
-    <div
-      className="absolute bottom-0 left-0 right-0 z-[1000] flex items-center justify-around px-4 pt-2 pb-5"
-      style={{
-        background: '#FFFFFF',
-        borderTop: '1px solid rgba(0,0,0,0.07)',
-      }}
-    >
+    /* 3 ronds flottants indépendants — style Uber Eats */
+    <div className="absolute bottom-7 left-0 right-0 z-[1000]
+                    flex items-end justify-center gap-6">
       {TABS.map(({ id, key, Icon }) => {
         const isActive = active === id
         return (
-          <button
-            key={id}
-            onClick={() => onChange(id)}
-            className="flex flex-col items-center gap-1.5 py-1 px-5"
-          >
-            {/* Petit cercle discret derrière l'icône active */}
-            <div
-              className="flex items-center justify-center rounded-full transition-all duration-200"
+          <div key={id} className="flex flex-col items-center gap-1.5">
+            <motion.button
+              onClick={() => onChange(id)}
+              animate={{
+                scale: isActive ? 1.08 : 1,
+              }}
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 380 }}
               style={{
-                width: 40, height: 40,
-                background: isActive ? `rgba(107,168,154,0.12)` : 'transparent',
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                background: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: isActive
+                  ? `0 6px 20px rgba(28,58,46,0.18), 0 2px 6px rgba(0,0,0,0.10)`
+                  : `0 4px 14px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)`,
+                border: isActive
+                  ? `1.5px solid rgba(107,168,154,0.40)`
+                  : `1px solid rgba(0,0,0,0.07)`,
               }}
             >
               <Icon active={isActive} />
-            </div>
+            </motion.button>
+
+            {/* Label sous le rond */}
             <span
               className="text-[10px] font-semibold leading-none"
               style={{ color: isActive ? FOREST_DEEP : '#9CA3AF' }}
             >
               {t(key)}
             </span>
-          </button>
+          </div>
         )
       })}
     </div>

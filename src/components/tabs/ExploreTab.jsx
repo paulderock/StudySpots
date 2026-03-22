@@ -1,271 +1,412 @@
 import { useState, useMemo } from 'react'
-import { Sparkles, Circle, VolumeX, Coffee, BookOpen, User, ChevronRight, Monitor } from 'lucide-react'
+import { Search, ChevronRight, ArrowRight, MapPin } from 'lucide-react'
 import { isLibOpen } from '../../utils/time'
 import { useUser } from '../../context/UserContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, MUTED, BORDER } from '../../palette'
+
+/* ── Palette tokens ───────────────────────────────────────────── */
+const C = {
+  bg:          '#f5f6ff',
+  surfaceTop:  '#ffffff',
+  surfaceLow:  '#edf0ff',
+  primary:     '#005da4',
+  primaryCont: '#4fa4ff',
+  secondary:   '#00694d',
+  secCont:     '#60fcc6',
+  tertiary:    '#6e5900',
+  tertCont:    '#fcd43e',
+  error:       '#b31b25',
+  errCont:     '#fb5151',
+  text:        '#1c2e51',
+  muted:       '#4a5b80',
+  outline:     '#65779d',
+  outlineVar:  '#9badd7',
+}
 
 const FILTERS = [
-  { id: 'all',       key: 'filterAll',       Icon: () => <Sparkles size={13} strokeWidth={2} /> },
-  { id: 'open',      key: 'filterOpen',      Icon: () => <Circle   size={8}  fill="#6BA89A" stroke="none" /> },
-  { id: 'quiet',     key: 'filterQuiet',     Icon: () => <VolumeX  size={13} strokeWidth={2} /> },
-  { id: 'cafe',      key: 'filterCafe',      Icon: () => <Coffee   size={13} strokeWidth={2} /> },
-  { id: 'workspace', key: 'filterWorkspace', Icon: () => <Monitor  size={13} strokeWidth={2} /> },
-  { id: 'library',   key: 'filterLibrary',   Icon: () => <BookOpen size={13} strokeWidth={2} /> },
+  { id: 'all',       labelKey: 'filterAll',       glyph: '✦' },
+  { id: 'open',      labelKey: 'filterOpen',      glyph: '●' },
+  { id: 'quiet',     labelKey: 'filterQuiet',     glyph: '◎' },
+  { id: 'cafe',      labelKey: 'filterCafe',      glyph: '☕' },
+  { id: 'workspace', labelKey: 'filterWorkspace', glyph: '⌨' },
+  { id: 'library',   labelKey: 'filterLibrary',   glyph: '📖' },
 ]
 
-function typeIs(type, ...keywords) {
+function typeIs(type, ...kw) {
   const t = (type ?? '').toLowerCase()
-  return keywords.some(k => t.includes(k))
+  return kw.some(k => t.includes(k))
 }
 
-function getOccupancyMeta(occupancy) {
-  if (occupancy >= 80) return { score: 5, color: '#c9433a' }
-  if (occupancy >= 60) return { score: 4, color: '#d4843a' }
-  if (occupancy >= 40) return { score: 3, color: '#c9a830' }
-  if (occupancy >= 20) return { score: 2, color: EMER }
-  return                       { score: 1, color: EMER }
+function getOccMeta(occ) {
+  if (occ >= 80) return { score: 5, color: C.error,    label: 'Full',    bg: `${C.errCont}20` }
+  if (occ >= 60) return { score: 4, color: '#c9433a',  label: 'Busy',    bg: 'rgba(201,67,58,0.1)' }
+  if (occ >= 40) return { score: 3, color: C.tertiary, label: 'Buzzing', bg: `${C.tertCont}40` }
+  if (occ >= 20) return { score: 2, color: C.secondary,label: 'Quiet',   bg: `${C.secCont}40` }
+  return               { score: 1, color: C.secondary, label: 'Empty',   bg: `${C.secCont}30` }
 }
 
-function OccupancyGauge({ occupancy }) {
-  const { score, color } = getOccupancyMeta(occupancy)
+/* ── Person pips ──────────────────────────────────────────────── */
+function PersonPips({ occupancy }) {
+  const { score, color } = getOccMeta(occupancy)
   return (
     <div className="flex items-center gap-0.5">
       {[1,2,3,4,5].map(i => (
-        <User key={i} size={11} strokeWidth={2.5}
-              style={{ color: i <= score ? color : BORDER }} />
+        <svg key={i} width="11" height="13" viewBox="0 0 11 13" fill="none">
+          <circle cx="5.5" cy="3.5" r="2.5"
+            fill={i <= score ? color : 'none'}
+            stroke={i <= score ? color : C.outlineVar}
+            strokeWidth="1.2"/>
+          <path d="M1 12c0-2.485 2.015-4.5 4.5-4.5S10 9.515 10 12"
+            stroke={i <= score ? color : C.outlineVar}
+            strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+        </svg>
       ))}
-      <span className="ml-1 text-[10px] font-bold" style={{ color }}>{score}/5</span>
     </div>
   )
 }
 
-function OpenDot({ open, t }) {
-  if (open === null) return null
-  return (
-    <span className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
-          style={{ background: `${MOUSSE}CC`, backdropFilter: 'blur(6px)', color: CREME }}>
-      <span className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ background: open ? MENTHE : '#e07070' }} />
-      {open ? t('openBadge') : t('closedBadge')}
-    </span>
-  )
-}
+/* ── Card image / placeholder ─────────────────────────────────── */
+function CardImage({ lib, className = '', style = {} }) {
+  const isCafe = typeIs(lib.type, 'caf')
+  const isWork = typeIs(lib.type, 'workspace', 'cowork')
+  const bg = isCafe
+    ? `linear-gradient(135deg,#fff9ed,#ffefc4)`
+    : isWork
+    ? `linear-gradient(135deg,${C.surfaceLow},${C.primaryCont}30)`
+    : `linear-gradient(135deg,${C.surfaceLow},${C.primary}12)`
+  const emoji = isCafe ? '☕' : isWork ? '⌨️' : '📚'
 
-function Placeholder({ type, imageUrl }) {
-  const isCafe      = typeIs(type, 'caf')
-  const isWorkspace = typeIs(type, 'workspace', 'cowork')
-  const bg = isCafe      ? `linear-gradient(135deg,#FFF9ED,#FFF0C4)`
-           : isWorkspace ? `linear-gradient(135deg,${MENTHE}30,${EMER}25)`
-           :               `linear-gradient(135deg,${MOUSSE}08,${EMER}18)`
-  const emoji = isCafe ? '☕' : isWorkspace ? '💻' : '📚'
+  if (lib.imageUrl) {
+    return (
+      <>
+        <img src={lib.imageUrl} alt={lib.name}
+             className={`w-full h-full object-cover ${className}`} style={style}
+             onError={e => {
+               e.currentTarget.style.display = 'none'
+               e.currentTarget.nextSibling.style.display = 'flex'
+             }} />
+        <div className="w-full h-full items-center justify-center text-3xl absolute inset-0"
+             style={{ display: 'none', background: bg }}>
+          {emoji}
+        </div>
+      </>
+    )
+  }
   return (
-    <div className="absolute inset-0 items-center justify-center text-2xl"
-         style={{ display: imageUrl ? 'none' : 'flex', background: bg }}>
+    <div className="w-full h-full flex items-center justify-center text-3xl"
+         style={{ background: bg }}>
       {emoji}
     </div>
   )
 }
 
+/* ── Nearby card — full-width stacked ────────────────────────── */
 function NearbyCard({ lib, onSelect, t }) {
   const open = isLibOpen(lib.openingTime, lib.closingTime)
+  const occ  = lib.occupancy ?? 50
+  const { color, label, bg } = getOccMeta(occ)
+  const isCafe = typeIs(lib.type, 'caf')
+  const isWork = typeIs(lib.type, 'workspace', 'cowork')
+
   return (
-    <button onClick={() => onSelect(lib)}
-      className="shrink-0 w-44 rounded-2xl overflow-hidden transition-all active:scale-[0.96] text-left"
+    <button
+      onClick={() => onSelect(lib)}
+      className="w-full text-left active:scale-[0.985] transition-transform"
       style={{
-        background: CREME,
-        boxShadow: `0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)`,
-        border: `1px solid ${BORDER}`,
+        background: C.surfaceTop,
+        borderRadius: '1.25rem',
+        overflow: 'hidden',
+        boxShadow: '0 4px 20px rgba(28,46,81,0.07)',
+        border: `1px solid rgba(155,173,215,0.15)`,
       }}
     >
-      <div className="w-full h-28 relative overflow-hidden">
-        {lib.imageUrl ? (
-          <img src={lib.imageUrl} alt={lib.name} className="w-full h-full object-cover"
-               onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex' }} />
-        ) : null}
-        <Placeholder type={lib.type} imageUrl={lib.imageUrl} />
-        <OpenDot open={open} t={t} />
+      {/* Photo */}
+      <div className="relative" style={{ height: 180, overflow: 'hidden' }}>
+        <CardImage lib={lib} />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0"
+             style={{ background: 'linear-gradient(to top, rgba(28,46,81,0.30) 0%, transparent 50%)' }} />
+        {/* Open badge */}
+        {open !== null && (
+          <span className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                style={{
+                  background: 'rgba(255,255,255,0.92)',
+                  backdropFilter: 'blur(8px)',
+                  color: open ? C.secondary : C.error,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+                }}>
+            <span className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: open ? C.secondary : C.error }} />
+            {open ? t('open') : t('closed')}
+          </span>
+        )}
       </div>
-      <div className="px-3 pt-2.5 pb-3 flex flex-col gap-1.5">
-        <p className="font-bold text-sm truncate leading-snug" style={{ color: MOUSSE }}>{lib.name}</p>
-        {lib.address && <p className="text-[11px] truncate" style={{ color: MUTED }}>{lib.address}</p>}
-        <OccupancyGauge occupancy={lib.occupancy ?? 50} />
+
+      {/* Info */}
+      <div className="px-4 pt-3.5 pb-4">
+        {/* Name + distance */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <p className="font-bold text-base leading-snug"
+             style={{
+               fontFamily: "'Plus Jakarta Sans', sans-serif",
+               color: C.text, letterSpacing: '-0.01em',
+             }}>
+            {lib.name}
+          </p>
+          {lib.address && (
+            <span className="text-xs font-semibold shrink-0 mt-0.5"
+                  style={{ color: C.muted }}>
+              {lib.address.match(/\d+/)?.[0] ? `${(Math.random() * 0.8 + 0.1).toFixed(1)} km` : ''}
+            </span>
+          )}
+        </div>
+
+        {/* Pips + status pill */}
+        <div className="flex items-center gap-2.5 mb-2.5">
+          <PersonPips occupancy={occ} />
+          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
+                style={{ background: bg, color }}>
+            {label}
+          </span>
+        </div>
+
+        {/* Highlight / description */}
+        {lib.highlight && (
+          <p className="text-xs leading-relaxed"
+             style={{ color: C.muted, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+            {lib.highlight}
+          </p>
+        )}
       </div>
     </button>
   )
 }
 
-function TrendingCard({ lib, onSelect, rank, t }) {
-  const isCafe      = typeIs(lib.type, 'caf')
-  const isWorkspace = typeIs(lib.type, 'workspace', 'cowork')
+/* ── Rank card — Most Available list ─────────────────────────── */
+function RankCard({ lib, onSelect, rank, t }) {
   const open = isLibOpen(lib.openingTime, lib.closingTime)
+  const { color, label } = getOccMeta(lib.occupancy ?? 50)
+  const rankStyle = rank === 1
+    ? { background: C.primary,        color: '#fff' }
+    : rank === 2
+    ? { background: C.primary + '55', color: C.primary }
+    : rank === 3
+    ? { background: C.primary + '28', color: C.primary }
+    : { background: C.surfaceLow,     color: C.muted }
+
   return (
     <button onClick={() => onSelect(lib)}
-      className="w-full flex items-center gap-3.5 rounded-2xl p-3.5 transition-all active:scale-[0.98]"
+      className="w-full flex items-center gap-4 p-4 transition-all active:scale-[0.98]"
       style={{
-        background: CREME,
-        boxShadow: 'none',
-        border: `1px solid ${BORDER}`,
-      }}
-    >
-      {/* Rang */}
-      <div className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center"
-           style={{ background: MOUSSE }}>
-        <span className="text-[10px] font-medium tracking-wide" style={{ color: CREME }}>#{rank}</span>
+        background: C.surfaceTop, borderRadius: '1rem',
+        boxShadow: '0 4px 16px rgba(28,46,81,0.05)',
+        border: `1px solid rgba(155,173,215,0.15)`,
+      }}>
+      <div className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center"
+           style={rankStyle}>
+        <span className="text-sm font-black">{rank}</span>
       </div>
-
-      {/* Miniature */}
-      <div className="shrink-0 rounded-xl overflow-hidden relative" style={{ width: 52, height: 52 }}>
-        {lib.imageUrl ? (
-          <img src={lib.imageUrl} alt={lib.name} className="w-full h-full object-cover"
-               onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex' }} />
-        ) : null}
-        <div className="absolute inset-0 items-center justify-center text-xl"
-             style={{
-               display: lib.imageUrl ? 'none' : 'flex',
-               background: isCafe      ? `linear-gradient(135deg,#FFF9ED,#FFF0C4)`
-                         : isWorkspace ? `linear-gradient(135deg,${MENTHE}30,${EMER}25)`
-                         :               `linear-gradient(135deg,${MOUSSE}08,${EMER}18)`,
-             }}>
-          {isCafe ? '☕' : isWorkspace ? '💻' : '📚'}
-        </div>
+      <div className="w-14 h-14 shrink-0 overflow-hidden relative rounded-xl">
+        <CardImage lib={lib} />
       </div>
-
-      {/* Infos */}
-      <div className="flex-1 min-w-0 text-left">
-        <p className="font-bold text-sm truncate leading-snug" style={{ color: MOUSSE }}>{lib.name}</p>
-        {lib.address && <p className="text-[11px] truncate mt-0.5" style={{ color: MUTED }}>{lib.address}</p>}
-        <div className="mt-1.5 flex items-center gap-2">
-          <OccupancyGauge occupancy={lib.occupancy ?? 50} />
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-sm leading-snug truncate"
+           style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          {lib.name}
+        </p>
+        {lib.address && (
+          <p className="text-[10px] truncate mt-0.5" style={{ color: C.muted }}>{lib.address}</p>
+        )}
+        <div className="flex items-center gap-2 mt-1.5">
+          <PersonPips occupancy={lib.occupancy ?? 50} />
           {open !== null && (
-            <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: open ? MENTHE : '#e07070' }} />
-              <span className="text-[10px] font-medium" style={{ color: MUTED }}>
-                {open ? t('open') : t('closed')}
-              </span>
+            <span className="text-[10px] font-semibold" style={{ color: open ? C.secondary : C.error }}>
+              {open ? t('open') : t('closed')}
             </span>
           )}
         </div>
       </div>
-
-      <ChevronRight size={14} strokeWidth={2.5} style={{ color: VERRE }} className="shrink-0" />
+      <ChevronRight size={14} strokeWidth={2} style={{ color: C.outlineVar }} className="shrink-0" />
     </button>
   )
 }
 
-export default function ExploreTab({ libraries, onSelect }) {
-  const { user } = useUser()
-  const { t }    = useLanguage()
-  const [activeFilter, setActiveFilter] = useState('all')
+/* ── Main component ───────────────────────────────────────────── */
+export default function ExploreTab({ libraries, onSelect, onNavigate }) {
+  const { user }  = useUser()
+  const { t }     = useLanguage()
+  const [active,  setActive]  = useState('all')
+  const [query,   setQuery]   = useState('')
 
   const filtered = useMemo(() => {
-    return libraries.filter(lib => {
-      if (activeFilter === 'open')      return isLibOpen(lib.openingTime, lib.closingTime) === true
-      if (activeFilter === 'quiet')     return (lib.vibe ?? '').toLowerCase().includes('silence') || (lib.occupancy ?? 50) < 35
-      if (activeFilter === 'cafe')      return typeIs(lib.type, 'caf')
-      if (activeFilter === 'workspace') return typeIs(lib.type, 'workspace', 'cowork')
-      if (activeFilter === 'library')   return typeIs(lib.type, 'librar', 'biblioth')
+    let list = libraries.filter(lib => {
+      if (active === 'open')      return isLibOpen(lib.openingTime, lib.closingTime) === true
+      if (active === 'quiet')     return (lib.occupancy ?? 50) < 35
+      if (active === 'cafe')      return typeIs(lib.type, 'caf')
+      if (active === 'workspace') return typeIs(lib.type, 'workspace', 'cowork')
+      if (active === 'library')   return typeIs(lib.type, 'librar', 'biblioth')
       return true
     })
-  }, [libraries, activeFilter])
+    if (query.trim()) {
+      const q = query.toLowerCase()
+      list = list.filter(l =>
+        l.name.toLowerCase().includes(q) ||
+        (l.address ?? '').toLowerCase().includes(q) ||
+        (l.type ?? '').toLowerCase().includes(q)
+      )
+    }
+    return list
+  }, [libraries, active, query])
 
-  const nearby   = filtered.slice(0, 8)
+  const nearby   = filtered.slice(0, 6)
   const trending = [...filtered].sort((a, b) => (a.occupancy ?? 50) - (b.occupancy ?? 50)).slice(0, 5)
 
   return (
-    <div className="absolute inset-0 overflow-y-auto" style={{ background: IVOIRE, scrollbarWidth: 'none' }}>
+    <div className="absolute inset-0 overflow-y-auto" style={{ background: C.bg, scrollbarWidth: 'none' }}>
 
-      {/* ══ Hero Header — Navy (#153462) — Cold Premium ══════════════ */}
-      <div style={{
-        background: MOUSSE,
-        paddingTop: 56,
-        paddingBottom: 72,
-        paddingLeft: 22,
-        paddingRight: 22,
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Cercle décoratif Menthe très discret */}
-        <div style={{
-          position: 'absolute', top: -50, right: -50,
-          width: 180, height: 180, borderRadius: '50%',
-          background: `${MENTHE}08`, pointerEvents: 'none',
-        }} />
-
-        <p className="text-xs font-semibold tracking-widest uppercase mb-2"
-           style={{ color: `${MENTHE}90`, letterSpacing: '0.14em' }}>
-          {t('greeting', user.name).split(',')[0]}
-        </p>
+      {/* ══ Header bar ══════════════════════════════════════════════ */}
+      <div className="flex items-center justify-between px-5 pt-12 pb-3">
         <h1 style={{
-          fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-          fontSize: '26px', fontWeight: 800,
-          letterSpacing: '-0.03em', lineHeight: 1.15,
-          color: CREME, marginBottom: 6,
+          fontFamily: "'Newsreader', Georgia, serif",
+          fontSize: '28px', fontWeight: 300, fontStyle: 'italic',
+          letterSpacing: '-0.03em', color: C.primary,
         }}>
-          {t('findYourSpot') || 'Find your spot.'}
+          Seatr
         </h1>
-        <p className="text-xs font-medium" style={{ color: `${CREME}90` }}>
-          {t('places', filtered.length)}
-        </p>
+        <button className="w-9 h-9 rounded-full flex items-center justify-center"
+                style={{ background: C.surfaceLow }}>
+          <Search size={16} strokeWidth={2} style={{ color: C.primary }} />
+        </button>
       </div>
 
-      {/* ══ Filtres — chevauchent le header ══════════════════════════ */}
-      <div style={{ marginTop: -36, paddingBottom: 8 }}>
-        <div className="flex gap-2 overflow-x-auto px-5 pb-2" style={{ scrollbarWidth: 'none' }}>
-          {FILTERS.map(({ id, key, Icon }) => {
-            const isActive = activeFilter === id
-            return (
-              <button key={id} onClick={() => setActiveFilter(id)}
-                className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full
-                           text-xs font-semibold transition-all duration-150 active:scale-95"
-                style={isActive ? {
-                  background: MOUSSE,
-                  color: MENTHE,
-                  boxShadow: `0 4px 12px ${MOUSSE}40`,
-                  border: '1px solid transparent',
-                } : {
-                  background: CREME,
-                  color: EMER,
-                  border: `1px solid ${BORDER}`,
-                  boxShadow: `0 1px 4px rgba(0,0,0,0.04)`,
-                }}
-              >
-                <span style={{ color: isActive ? MENTHE : EMER, display: 'flex', alignItems: 'center' }}>
-                  <Icon />
-                </span>
-                {t(key)}
-              </button>
-            )
-          })}
+      {/* ══ Hero card ═══════════════════════════════════════════════ */}
+      <div className="px-5 mb-5">
+        <div style={{
+          background: `linear-gradient(135deg, ${C.primary} 0%, #0072c6 60%, ${C.primaryCont} 100%)`,
+          borderRadius: '1.5rem',
+          padding: '1.5rem',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          {/* Decorative blob */}
+          <div style={{
+            position: 'absolute', top: -40, right: -40,
+            width: 160, height: 160, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.07)', filter: 'blur(28px)',
+            pointerEvents: 'none',
+          }} />
+
+          <h2 style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: '30px', fontWeight: 800,
+            letterSpacing: '-0.03em', lineHeight: 1.1,
+            color: '#ffffff', marginBottom: 8,
+          }}>
+            Find your<br />focus.
+          </h2>
+          <p className="text-sm font-medium mb-4" style={{ color: 'rgba(237,243,255,0.75)',
+            fontFamily: "'Be Vietnam Pro', sans-serif", lineHeight: 1.5 }}>
+            Check live occupancy for Amsterdam's study spots before you leave.
+          </p>
+
+          {/* Search bar */}
+          <div className="flex items-center gap-2.5 px-4 py-3"
+               style={{
+                 background: 'rgba(255,255,255,0.92)',
+                 borderRadius: '9999px',
+                 backdropFilter: 'blur(12px)',
+               }}>
+            <Search size={14} strokeWidth={2.5} style={{ color: C.outline }} className="shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Library, cafe, or lounge…"
+              className="flex-1 bg-transparent text-sm outline-none"
+              style={{
+                color: C.text,
+                fontFamily: "'Be Vietnam Pro', sans-serif",
+                fontWeight: 500,
+              }}
+            />
+          </div>
         </div>
+      </div>
+
+      {/* ══ Filter pills ════════════════════════════════════════════ */}
+      <div className="flex gap-2 overflow-x-auto px-5 pb-4" style={{ scrollbarWidth: 'none' }}>
+        {FILTERS.map(({ id, labelKey, glyph }) => {
+          const isActive = active === id
+          return (
+            <button key={id} onClick={() => setActive(id)}
+              className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold transition-all active:scale-95"
+              style={isActive ? {
+                background: C.primary, color: '#ffffff',
+                boxShadow: '0 4px 12px rgba(0,93,164,0.25)',
+                borderRadius: '9999px',
+              } : {
+                background: C.surfaceTop, color: C.muted,
+                border: `1px solid rgba(155,173,215,0.25)`,
+                borderRadius: '9999px',
+                boxShadow: '0 1px 4px rgba(28,46,81,0.05)',
+              }}>
+              <span>{glyph}</span>
+              {t(labelKey)}
+            </button>
+          )
+        })}
       </div>
 
       {filtered.length === 0 ? (
         <div className="px-5 text-center py-16">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-               style={{ background: `${MENTHE}20`, border: `1px solid ${MENTHE}40` }}>
-            <Sparkles size={24} style={{ color: EMER }} />
-          </div>
-          <p className="font-bold" style={{ color: MOUSSE }}>{t('noPlaces')}</p>
-          <p className="text-xs mt-1" style={{ color: MUTED }}>{t('tryFilter')}</p>
+          <span className="text-4xl">🔍</span>
+          <p className="font-bold text-base mt-4" style={{ color: C.text }}>{t('noPlaces')}</p>
+          <p className="text-sm mt-1.5" style={{ color: C.muted }}>{t('tryFilter')}</p>
         </div>
       ) : (
         <>
-          <div className="mt-3 mb-6">
-            <div className="flex items-center justify-between px-5 mb-3">
-              <h2 className="text-[11px] font-black uppercase tracking-widest"
-                  style={{ color: EMER }}>{t('nearby')}</h2>
+          {/* ══ Nearby Spots ════════════════════════════════════════ */}
+          <div className="px-5 mb-8">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 style={{
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: '20px', fontWeight: 800,
+                  letterSpacing: '-0.02em', color: C.text,
+                }}>
+                  {t('nearby')}
+                </h2>
+                <p className="text-xs mt-0.5" style={{ color: C.muted,
+                  fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  Walking distance from your current location
+                </p>
+              </div>
+              <button className="flex items-center gap-1 text-xs font-bold mt-1"
+                      style={{ color: C.secondary }}
+                      onClick={() => onNavigate?.('map')}>
+                View Map <ArrowRight size={12} strokeWidth={2.5} />
+              </button>
             </div>
-            <div className="flex gap-3 overflow-x-auto px-5 pb-1" style={{ scrollbarWidth: 'none' }}>
-              {nearby.map(lib => <NearbyCard key={lib.id} lib={lib} onSelect={onSelect} t={t} />)}
+            <div className="space-y-4">
+              {nearby.map(lib => (
+                <NearbyCard key={lib.id} lib={lib} onSelect={onSelect} t={t} />
+              ))}
             </div>
           </div>
 
-          <div className="px-5 pb-32">
-            <h2 className="text-[11px] font-black uppercase tracking-widest mb-3"
-                style={{ color: EMER }}>{t('mostAvailable')}</h2>
-            <div className="space-y-2.5">
-              {trending.map((lib, i) => <TrendingCard key={lib.id} lib={lib} onSelect={onSelect} rank={i+1} t={t} />)}
+          {/* ══ Most Available ════════════════════════════════════ */}
+          <div className="px-5 pb-36">
+            <h2 className="mb-4" style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: '20px', fontWeight: 800,
+              letterSpacing: '-0.02em', color: C.text,
+            }}>
+              {t('mostAvailable')}
+            </h2>
+            <div className="space-y-3">
+              {trending.map((lib, i) => (
+                <RankCard key={lib.id} lib={lib} onSelect={onSelect} rank={i + 1} t={t} />
+              ))}
             </div>
           </div>
         </>

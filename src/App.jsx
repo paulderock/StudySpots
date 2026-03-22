@@ -11,19 +11,19 @@ import { useStudySpots } from './hooks/useStudySpots'
 import { UserProvider, useUser } from './context/UserContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { LanguageProvider, useLanguage } from './context/LanguageContext'
-import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, LICHEN } from './palette'
+import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, MUTED, BORDER } from './palette'
 
 /* ─── Aliases locaux pour lisibilité ────────────────────────────── */
-const FD  = MOUSSE   // headers / fonds profonds
+const FD  = MOUSSE   // navy profond — headers, textes forts
 const FL  = EMER     // icons / labels
 const SAG = EMER     // accents / dots
-const CRM = CREME    // texte sur foncé
-const BG  = IVOIRE   // fond app
+const CRM = CREME    // blanc pur — texte sur foncé
+const BG  = IVOIRE   // ivoire froid — fond app
 
 /* ─── Config notation ────────────────────────────────────────────── */
 const RATINGS_BASE = [
-  { value: 1, key: 'rating1', color: '#4A8C82', pastel: '#e8f4f2', glow: '#4A8C8230' },
-  { value: 2, key: 'rating2', color: '#6BA89A', pastel: '#eef6f4', glow: '#6BA89A30' },
+  { value: 1, key: 'rating1', color: EMER,      pastel: '#e8f4f2', glow: `${EMER}30` },
+  { value: 2, key: 'rating2', color: EMER,      pastel: '#eef6f4', glow: `${EMER}30` },
   { value: 3, key: 'rating3', color: '#d4a843', pastel: '#fdf5dc', glow: '#d4a84330' },
   { value: 4, key: 'rating4', color: '#e07c3a', pastel: '#fdf0e6', glow: '#e07c3a30' },
   { value: 5, key: 'rating5', color: '#c9433a', pastel: '#fdecea', glow: '#c9433a30' },
@@ -33,7 +33,7 @@ const RATINGS_BASE = [
 function getHeatColor(occupancy) {
   if (occupancy >= 70) return '#c9433a'
   if (occupancy >= 40) return '#d4a843'
-  return '#4A8C82'
+  return EMER
 }
 function getOccupancyLabel(occupancy, t) {
   if (occupancy >= 80) return t('occupancyVeryBusy')
@@ -99,9 +99,9 @@ function typeIs(type, ...keywords) {
 function PlaceholderImage({ type }) {
   const isCafe      = typeIs(type, 'caf')
   const isWorkspace = typeIs(type, 'workspace', 'cowork')
-  const bg = isCafe      ? `linear-gradient(135deg,${CRM},#e4e396)`
-           : isWorkspace ? `linear-gradient(135deg,${SAG}30,${FL}25)`
-           :               `linear-gradient(135deg,${FD}12,${FL}18)`
+  const bg = isCafe      ? `linear-gradient(135deg,#FFF9ED,#FFF0C4)`
+           : isWorkspace ? `linear-gradient(135deg,${MENTHE}30,${EMER}25)`
+           :               `linear-gradient(135deg,${MOUSSE}08,${EMER}18)`
   const emoji = isCafe ? '☕' : isWorkspace ? '💻' : '📚'
   return (
     <div className="w-full h-full flex flex-col items-center justify-center gap-2"
@@ -415,11 +415,10 @@ function LibrarySheet({ lib, onClose, onReport }) {
         <div className="flex flex-wrap items-center gap-2 mb-4">
           {lib.type && <TypeBadge type={lib.type} />}
           {lib.lastUpdated ? (
-            <span className={`inline-flex items-center gap-1 text-xs font-medium
-                              rounded-full px-2.5 py-0.5 border
-              ${isStale(lib.lastUpdated)
-                ? 'text-slate-400 bg-slate-50 border-slate-200'
-                : 'text-emerald-700 bg-emerald-50 border-emerald-200'}`}>
+            <span className="inline-flex items-center gap-1 text-xs font-medium rounded-full px-2.5 py-0.5 border"
+                  style={isStale(lib.lastUpdated)
+                    ? { color: '#9CA3AF', background: '#F9FAFB', borderColor: '#E5E7EB' }
+                    : { color: EMER, background: `${EMER}12`, borderColor: `${EMER}30` }}>
               {isStale(lib.lastUpdated)
                 ? <Clock size={11} strokeWidth={2} />
                 : <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: SAG }} />}

@@ -3,7 +3,7 @@ import { Sparkles, Circle, VolumeX, Coffee, BookOpen, User, ChevronRight, Monito
 import { isLibOpen } from '../../utils/time'
 import { useUser } from '../../context/UserContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, LICHEN } from '../../palette'
+import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, MUTED, BORDER } from '../../palette'
 
 const FILTERS = [
   { id: 'all',       key: 'filterAll',       Icon: () => <Sparkles size={13} strokeWidth={2} /> },
@@ -33,7 +33,7 @@ function OccupancyGauge({ occupancy }) {
     <div className="flex items-center gap-0.5">
       {[1,2,3,4,5].map(i => (
         <User key={i} size={11} strokeWidth={2.5}
-              style={{ color: i <= score ? color : `${MOUSSE}25` }} />
+              style={{ color: i <= score ? color : BORDER }} />
       ))}
       <span className="ml-1 text-[10px] font-bold" style={{ color }}>{score}/5</span>
     </div>
@@ -55,9 +55,9 @@ function OpenDot({ open, t }) {
 function Placeholder({ type, imageUrl }) {
   const isCafe      = typeIs(type, 'caf')
   const isWorkspace = typeIs(type, 'workspace', 'cowork')
-  const bg = isCafe      ? `linear-gradient(135deg,${CREME},#e8e89a)`
-           : isWorkspace ? `linear-gradient(135deg,${MENTHE}40,${EMER}35)`
-           :               `linear-gradient(135deg,${MOUSSE}18,${EMER}22)`
+  const bg = isCafe      ? `linear-gradient(135deg,#FFF9ED,#FFF0C4)`
+           : isWorkspace ? `linear-gradient(135deg,${MENTHE}30,${EMER}25)`
+           :               `linear-gradient(135deg,${MOUSSE}08,${EMER}18)`
   const emoji = isCafe ? '☕' : isWorkspace ? '💻' : '📚'
   return (
     <div className="absolute inset-0 items-center justify-center text-2xl"
@@ -73,9 +73,9 @@ function NearbyCard({ lib, onSelect, t }) {
     <button onClick={() => onSelect(lib)}
       className="shrink-0 w-44 rounded-2xl overflow-hidden transition-all active:scale-[0.96] text-left"
       style={{
-        background: '#fff',
-        boxShadow: `0 2px 12px ${MOUSSE}18, 0 1px 3px rgba(0,0,0,0.05)`,
-        border: `1px solid ${VERRE}60`,
+        background: CREME,
+        boxShadow: `0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)`,
+        border: `1px solid ${BORDER}`,
       }}
     >
       <div className="w-full h-28 relative overflow-hidden">
@@ -88,7 +88,7 @@ function NearbyCard({ lib, onSelect, t }) {
       </div>
       <div className="px-3 pt-2.5 pb-3 flex flex-col gap-1.5">
         <p className="font-bold text-sm truncate leading-snug" style={{ color: MOUSSE }}>{lib.name}</p>
-        {lib.address && <p className="text-[11px] truncate" style={{ color: LICHEN }}>{lib.address}</p>}
+        {lib.address && <p className="text-[11px] truncate" style={{ color: MUTED }}>{lib.address}</p>}
         <OccupancyGauge occupancy={lib.occupancy ?? 50} />
       </div>
     </button>
@@ -103,9 +103,9 @@ function TrendingCard({ lib, onSelect, rank, t }) {
     <button onClick={() => onSelect(lib)}
       className="w-full flex items-center gap-3.5 rounded-2xl p-3.5 transition-all active:scale-[0.98]"
       style={{
-        background: '#fff',
+        background: CREME,
         boxShadow: 'none',
-        border: `1px solid ${VERRE}70`,
+        border: `1px solid ${BORDER}`,
       }}
     >
       {/* Rang */}
@@ -123,9 +123,9 @@ function TrendingCard({ lib, onSelect, rank, t }) {
         <div className="absolute inset-0 items-center justify-center text-xl"
              style={{
                display: lib.imageUrl ? 'none' : 'flex',
-               background: isCafe ? `linear-gradient(135deg,${CREME},#e8e89a)`
-                         : isWorkspace ? `linear-gradient(135deg,${MENTHE}40,${EMER}35)`
-                         : `linear-gradient(135deg,${MOUSSE}18,${EMER}22)`,
+               background: isCafe      ? `linear-gradient(135deg,#FFF9ED,#FFF0C4)`
+                         : isWorkspace ? `linear-gradient(135deg,${MENTHE}30,${EMER}25)`
+                         :               `linear-gradient(135deg,${MOUSSE}08,${EMER}18)`,
              }}>
           {isCafe ? '☕' : isWorkspace ? '💻' : '📚'}
         </div>
@@ -134,13 +134,13 @@ function TrendingCard({ lib, onSelect, rank, t }) {
       {/* Infos */}
       <div className="flex-1 min-w-0 text-left">
         <p className="font-bold text-sm truncate leading-snug" style={{ color: MOUSSE }}>{lib.name}</p>
-        {lib.address && <p className="text-[11px] truncate mt-0.5" style={{ color: LICHEN }}>{lib.address}</p>}
+        {lib.address && <p className="text-[11px] truncate mt-0.5" style={{ color: MUTED }}>{lib.address}</p>}
         <div className="mt-1.5 flex items-center gap-2">
           <OccupancyGauge occupancy={lib.occupancy ?? 50} />
           {open !== null && (
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: open ? MENTHE : '#e07070' }} />
-              <span className="text-[10px] font-medium" style={{ color: LICHEN }}>
+              <span className="text-[10px] font-medium" style={{ color: MUTED }}>
                 {open ? t('open') : t('closed')}
               </span>
             </span>
@@ -175,7 +175,7 @@ export default function ExploreTab({ libraries, onSelect }) {
   return (
     <div className="absolute inset-0 overflow-y-auto" style={{ background: IVOIRE, scrollbarWidth: 'none' }}>
 
-      {/* ══ Hero Header — Mousse (#4E634D) ═══════════════════════════ */}
+      {/* ══ Hero Header — Navy (#153462) — Cold Premium ══════════════ */}
       <div style={{
         background: MOUSSE,
         paddingTop: 56,
@@ -224,10 +224,10 @@ export default function ExploreTab({ libraries, onSelect }) {
                   boxShadow: `0 4px 12px ${MOUSSE}40`,
                   border: '1px solid transparent',
                 } : {
-                  background: '#fff',
+                  background: CREME,
                   color: EMER,
-                  border: `1px solid ${VERRE}80`,
-                  boxShadow: `0 1px 4px rgba(0,0,0,0.05)`,
+                  border: `1px solid ${BORDER}`,
+                  boxShadow: `0 1px 4px rgba(0,0,0,0.04)`,
                 }}
               >
                 <span style={{ color: isActive ? MENTHE : EMER, display: 'flex', alignItems: 'center' }}>
@@ -247,7 +247,7 @@ export default function ExploreTab({ libraries, onSelect }) {
             <Sparkles size={24} style={{ color: EMER }} />
           </div>
           <p className="font-bold" style={{ color: MOUSSE }}>{t('noPlaces')}</p>
-          <p className="text-xs mt-1" style={{ color: LICHEN }}>{t('tryFilter')}</p>
+          <p className="text-xs mt-1" style={{ color: MUTED }}>{t('tryFilter')}</p>
         </div>
       ) : (
         <>

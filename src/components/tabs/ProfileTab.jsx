@@ -8,7 +8,7 @@ import {
 import { useUser, getBadge } from '../../context/UserContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, LICHEN } from '../../palette'
+import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, MUTED, BORDER } from '../../palette'
 
 /* ── Barre de progression ─────────────────────────────────────── */
 function ProgressBar({ score, badge }) {
@@ -31,7 +31,7 @@ function Section({ title, children }) {
         {title}
       </p>
       <div className="bg-white rounded-2xl overflow-hidden divide-y"
-           style={{ border: `1px solid ${VERRE}40` }}>
+           style={{ border: `1px solid ${BORDER}` }}>
         {children}
       </div>
     </div>
@@ -59,7 +59,7 @@ function Row({ icon: Icon, label, value, danger, onClick, toggle, toggled, iconC
       ) : value ? (
         <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>{value}</span>
       ) : (
-        <ChevronRight size={14} strokeWidth={2} style={{ color: `${VERRE}AA` }} className="shrink-0" />
+        <ChevronRight size={14} strokeWidth={2} style={{ color: MUTED }} className="shrink-0" />
       )}
     </button>
   )
@@ -118,7 +118,7 @@ export default function ProfileTab() {
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <div className="pt-14 pb-5 px-5 mb-3"
-           style={{ background: '#fff', borderBottom: `1px solid ${VERRE}40` }}>
+           style={{ background: CREME, borderBottom: `1px solid ${BORDER}` }}>
 
         {/* Avatar + nom */}
         <div className="flex items-center gap-4 mb-5">
@@ -126,7 +126,7 @@ export default function ProfileTab() {
                style={{
                  background: `linear-gradient(135deg, ${MENTHE}35, ${EMER}25)`,
                  boxShadow: `0 8px 24px ${EMER}30`,
-                 border: `2px solid ${VERRE}80`,
+                 border: `2px solid ${BORDER}`,
                }}>
             <span className="text-2xl font-black" style={{ color: MOUSSE }}>
               {user.fullName.charAt(0)}
@@ -147,7 +147,7 @@ export default function ProfileTab() {
         <div className="rounded-2xl p-4 mb-4"
              style={{
                background: `linear-gradient(135deg, ${MOUSSE} 0%, #3d5c3c 50%, ${EMER} 100%)`,
-               border: `1px solid ${VERRE}30`,
+               border: `1px solid ${BORDER}`,
                boxShadow: `0 8px 24px ${MOUSSE}40`,
              }}>
           <div className="flex items-end justify-between mb-3">
@@ -184,10 +184,10 @@ export default function ProfileTab() {
             { label: t('statLevel'),   value: badge.label,  Icon: Zap,    color: MENTHE   },
           ].map(s => (
             <div key={s.label} className="rounded-xl p-3 text-center"
-                 style={{ background: `${EMER}10`, border: `1px solid ${VERRE}50` }}>
+                 style={{ background: `${EMER}10`, border: `1px solid ${BORDER}` }}>
               <s.Icon size={16} strokeWidth={2} className="mx-auto mb-1.5" style={{ color: s.color }} />
               <p className="font-bold text-sm leading-none truncate" style={{ color: MOUSSE }}>{s.value}</p>
-              <p className="text-[10px] mt-0.5 font-medium" style={{ color: LICHEN }}>{s.label}</p>
+              <p className="text-[10px] mt-0.5 font-medium" style={{ color: MUTED }}>{s.label}</p>
             </div>
           ))}
         </div>
@@ -199,7 +199,7 @@ export default function ProfileTab() {
           <p className="text-[11px] font-bold uppercase tracking-widest mb-2 px-1"
              style={{ color: EMER }}>{t('recentActivity')}</p>
           <div className="bg-white rounded-2xl overflow-hidden divide-y"
-               style={{ border: `1px solid ${VERRE}40` }}>
+               style={{ border: `1px solid ${BORDER}` }}>
             {user.recentActivity.map((a, i) => (
               <div key={i} className="flex items-center gap-3 px-4 py-2.5">
                 <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
@@ -208,7 +208,7 @@ export default function ProfileTab() {
                 </div>
                 <span className="flex-1 text-sm font-medium" style={{ color: MOUSSE }}>{a.label}</span>
                 <span className="text-xs font-bold" style={{ color: EMER }}>{a.pts}</span>
-                <span className="text-[10px] ml-1" style={{ color: LICHEN }}>{formatTimeAgo(a.at)}</span>
+                <span className="text-[10px] ml-1" style={{ color: MUTED }}>{formatTimeAgo(a.at)}</span>
               </div>
             ))}
           </div>
@@ -220,7 +220,7 @@ export default function ProfileTab() {
         <p className="text-[11px] font-bold uppercase tracking-widest mb-2 px-1"
            style={{ color: EMER }}>{t('badges')}</p>
         <div className="bg-white rounded-2xl p-4"
-             style={{ border: `1px solid ${VERRE}40` }}>
+             style={{ border: `1px solid ${BORDER}` }}>
           <div className="flex justify-around">
             <AchievementBadge icon={Sunrise}  label={t('badgeEarlyBird')} unlocked={earlyBird} color="#d4a843" />
             <AchievementBadge icon={Flame}    label={t('badgeOnFire')}    unlocked={onFire}    color="#c9433a" />
@@ -262,8 +262,8 @@ export default function ProfileTab() {
                         background: MOUSSE, color: MENTHE,
                         boxShadow: `0 2px 8px ${MOUSSE}40`,
                       } : {
-                        background: `${EMER}10`, color: LICHEN,
-                        border: `1px solid ${VERRE}60`,
+                        background: `${EMER}10`, color: MUTED,
+                        border: `1px solid ${BORDER}`,
                       }}>
                 <span>{flag}</span> {label}
               </button>

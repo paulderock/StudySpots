@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext'
 
 /* ── Palette ──────────────────────────────────────────────────── */
 const P = {
-  cream:       '#F6F6C9',
+  cream:       '#FFFFFF',    // blanc pur — Cold Premium
   mint:        '#8AD1C2',
   forestLight: '#4FA095',
   forestDeep:  '#153462',

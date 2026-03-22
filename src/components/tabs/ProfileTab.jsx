@@ -8,12 +8,7 @@ import {
 import { useUser, getBadge } from '../../context/UserContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
-
-/* ── Palette ──────────────────────────────────────────────────── */
-const MINT         = '#6BA89A'   // sauge mat
-const FOREST_LIGHT = '#4A8C82'   // vert désaturé
-const FOREST_DEEP  = '#1C3A2E'  // vert profond mat
-const CREAM        = '#F0EFD8'   // crème chaud
+import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, LICHEN } from '../../palette'
 
 /* ── Barre de progression ─────────────────────────────────────── */
 function ProgressBar({ score, badge }) {
@@ -22,7 +17,7 @@ function ProgressBar({ score, badge }) {
   return (
     <div className="w-full rounded-full h-1.5 overflow-hidden" style={{ background: 'rgba(255,255,255,0.25)' }}>
       <div className="h-1.5 rounded-full transition-all duration-700"
-           style={{ width: `${pct}%`, background: `linear-gradient(90deg,${MINT},${FOREST_LIGHT})` }} />
+           style={{ width: `${pct}%`, background: `linear-gradient(90deg,${MENTHE},${EMER})` }} />
     </div>
   )
 }
@@ -32,11 +27,11 @@ function Section({ title, children }) {
   return (
     <div className="px-5 mb-4">
       <p className="text-[11px] font-bold uppercase tracking-widest mb-2 px-1"
-         style={{ color: FOREST_LIGHT }}>
+         style={{ color: EMER }}>
         {title}
       </p>
       <div className="bg-white rounded-2xl overflow-hidden divide-y"
-           style={{ border: `1px solid rgba(79,160,149,0.18)`, divideColor: `rgba(79,160,149,0.08)` }}>
+           style={{ border: `1px solid ${VERRE}40` }}>
         {children}
       </div>
     </div>
@@ -50,21 +45,21 @@ function Row({ icon: Icon, label, value, danger, onClick, toggle, toggled, iconC
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50/60 transition-colors text-left">
       <span className="w-6 flex items-center justify-center shrink-0">
         <Icon size={15} strokeWidth={2}
-              style={{ color: danger ? '#ef4444' : iconColor ?? FOREST_LIGHT }} />
+              style={{ color: danger ? '#ef4444' : iconColor ?? EMER }} />
       </span>
       <span className={`flex-1 text-sm font-medium ${danger ? 'text-red-500' : 'text-slate-700'}`}>
         {label}
       </span>
       {toggle ? (
         <div className="w-9 h-5 rounded-full transition-colors duration-200 flex items-center px-0.5"
-             style={{ background: toggled ? FOREST_LIGHT : '#e2e8f0' }}>
+             style={{ background: toggled ? EMER : '#e2e8f0' }}>
           <div className="w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200"
                style={{ transform: toggled ? 'translateX(16px)' : 'translateX(0)' }} />
         </div>
       ) : value ? (
         <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>{value}</span>
       ) : (
-        <ChevronRight size={14} strokeWidth={2} style={{ color: `rgba(79,160,149,0.40)` }} className="shrink-0" />
+        <ChevronRight size={14} strokeWidth={2} style={{ color: `${VERRE}AA` }} className="shrink-0" />
       )}
     </button>
   )
@@ -119,30 +114,30 @@ export default function ProfileTab() {
 
   return (
     <div className="absolute inset-0 overflow-y-auto pb-28"
-         style={{ background: '#F5F5F0', scrollbarWidth: 'none' }}>
+         style={{ background: IVOIRE, scrollbarWidth: 'none' }}>
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <div className="pt-14 pb-5 px-5 mb-3"
-           style={{ background: '#fff', borderBottom: `1px solid rgba(79,160,149,0.15)` }}>
+           style={{ background: '#fff', borderBottom: `1px solid ${VERRE}40` }}>
 
         {/* Avatar + nom */}
         <div className="flex items-center gap-4 mb-5">
           <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-md shrink-0"
                style={{
-                 background: `linear-gradient(135deg, ${MINT}40, ${FOREST_LIGHT}30)`,
-                 boxShadow: `0 8px 24px rgba(79,160,149,0.20)`,
-                 border: `2px solid rgba(138,209,194,0.40)`,
+                 background: `linear-gradient(135deg, ${MENTHE}35, ${EMER}25)`,
+                 boxShadow: `0 8px 24px ${EMER}30`,
+                 border: `2px solid ${VERRE}80`,
                }}>
-            <span className="text-2xl font-black" style={{ color: FOREST_DEEP }}>
+            <span className="text-2xl font-black" style={{ color: MOUSSE }}>
               {user.fullName.charAt(0)}
             </span>
           </div>
           <div>
-            <h1 className="font-black text-lg tracking-tight leading-tight" style={{ color: FOREST_DEEP }}>
+            <h1 className="font-black text-lg tracking-tight leading-tight" style={{ color: MOUSSE }}>
               {user.fullName}
             </h1>
             <span className="inline-block text-xs font-bold rounded-full px-2.5 py-0.5 mt-1.5"
-                  style={{ background: `${MINT}22`, color: FOREST_LIGHT }}>
+                  style={{ background: `${EMER}20`, color: EMER }}>
               {badge.label}
             </span>
           </div>
@@ -151,48 +146,48 @@ export default function ProfileTab() {
         {/* Carte score */}
         <div className="rounded-2xl p-4 mb-4"
              style={{
-               background: `linear-gradient(135deg, ${FOREST_DEEP} 0%, #1e4a7a 50%, ${FOREST_LIGHT} 100%)`,
-               border: `1px solid rgba(138,209,194,0.20)`,
-               boxShadow: `0 8px 24px rgba(21,52,98,0.25)`,
+               background: `linear-gradient(135deg, ${MOUSSE} 0%, #3d5c3c 50%, ${EMER} 100%)`,
+               border: `1px solid ${VERRE}30`,
+               boxShadow: `0 8px 24px ${MOUSSE}40`,
              }}>
           <div className="flex items-end justify-between mb-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider mb-0.5"
-                 style={{ color: `rgba(138,209,194,0.80)` }}>{t('totalScore')}</p>
-              <p className="text-3xl font-black leading-none" style={{ color: CREAM }}>
+                 style={{ color: `${MENTHE}CC` }}>{t('totalScore')}</p>
+              <p className="text-3xl font-black leading-none" style={{ color: CREME }}>
                 {user.score.toLocaleString('fr-FR')}
-                <span className="text-sm font-semibold ml-1" style={{ color: MINT }}>{t('pts')}</span>
+                <span className="text-sm font-semibold ml-1" style={{ color: MENTHE }}>{t('pts')}</span>
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs font-semibold" style={{ color: MINT }}>{t('reportsCount', user.reports)}</p>
-              <p className="text-xs mt-0.5" style={{ color: `rgba(246,246,201,0.50)` }}>{t('ptsPerReport')}</p>
+              <p className="text-xs font-semibold" style={{ color: MENTHE }}>{t('reportsCount', user.reports)}</p>
+              <p className="text-xs mt-0.5" style={{ color: `${CREME}80` }}>{t('ptsPerReport')}</p>
             </div>
           </div>
           {badge.next ? (
             <>
               <ProgressBar score={user.score} badge={badge} />
-              <p className="text-xs mt-1.5" style={{ color: `rgba(246,246,201,0.60)` }}>
+              <p className="text-xs mt-1.5" style={{ color: `${CREME}80` }}>
                 {t('ptsUntil', badge.next - user.score, getBadge(badge.next).label)}
               </p>
             </>
           ) : (
-            <p className="text-xs font-bold" style={{ color: CREAM }}>{t('maxLevel')}</p>
+            <p className="text-xs font-bold" style={{ color: CREME }}>{t('maxLevel')}</p>
           )}
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: t('statReports'), value: user.reports, Icon: MapPin, color: FOREST_LIGHT },
-            { label: t('statScore'),   value: user.score,   Icon: Star,   color: '#f59e0b'    },
-            { label: t('statLevel'),   value: badge.label,  Icon: Zap,    color: MINT         },
+            { label: t('statReports'), value: user.reports, Icon: MapPin, color: EMER     },
+            { label: t('statScore'),   value: user.score,   Icon: Star,   color: '#d4a843' },
+            { label: t('statLevel'),   value: badge.label,  Icon: Zap,    color: MENTHE   },
           ].map(s => (
             <div key={s.label} className="rounded-xl p-3 text-center"
-                 style={{ background: '#f2f6f5', border: `1px solid rgba(79,160,149,0.15)` }}>
+                 style={{ background: `${EMER}10`, border: `1px solid ${VERRE}50` }}>
               <s.Icon size={16} strokeWidth={2} className="mx-auto mb-1.5" style={{ color: s.color }} />
-              <p className="font-bold text-sm leading-none truncate" style={{ color: FOREST_DEEP }}>{s.value}</p>
-              <p className="text-[10px] mt-0.5 font-medium" style={{ color: '#94a3b8' }}>{s.label}</p>
+              <p className="font-bold text-sm leading-none truncate" style={{ color: MOUSSE }}>{s.value}</p>
+              <p className="text-[10px] mt-0.5 font-medium" style={{ color: LICHEN }}>{s.label}</p>
             </div>
           ))}
         </div>
@@ -202,18 +197,18 @@ export default function ProfileTab() {
       {user.recentActivity?.length > 0 && (
         <div className="px-5 mb-4">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-2 px-1"
-             style={{ color: FOREST_LIGHT }}>{t('recentActivity')}</p>
+             style={{ color: EMER }}>{t('recentActivity')}</p>
           <div className="bg-white rounded-2xl overflow-hidden divide-y"
-               style={{ border: `1px solid rgba(79,160,149,0.18)` }}>
+               style={{ border: `1px solid ${VERRE}40` }}>
             {user.recentActivity.map((a, i) => (
               <div key={i} className="flex items-center gap-3 px-4 py-2.5">
                 <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-                     style={{ background: `rgba(138,209,194,0.15)` }}>
-                  <MapPin size={12} strokeWidth={2} style={{ color: FOREST_LIGHT }} />
+                     style={{ background: `${MENTHE}25` }}>
+                  <MapPin size={12} strokeWidth={2} style={{ color: EMER }} />
                 </div>
-                <span className="flex-1 text-sm font-medium text-slate-600">{a.label}</span>
-                <span className="text-xs font-bold" style={{ color: FOREST_LIGHT }}>{a.pts}</span>
-                <span className="text-[10px] text-slate-400 ml-1">{formatTimeAgo(a.at)}</span>
+                <span className="flex-1 text-sm font-medium" style={{ color: MOUSSE }}>{a.label}</span>
+                <span className="text-xs font-bold" style={{ color: EMER }}>{a.pts}</span>
+                <span className="text-[10px] ml-1" style={{ color: LICHEN }}>{formatTimeAgo(a.at)}</span>
               </div>
             ))}
           </div>
@@ -223,14 +218,14 @@ export default function ProfileTab() {
       {/* ── Badges ───────────────────────────────────────────────── */}
       <div className="px-5 mb-4">
         <p className="text-[11px] font-bold uppercase tracking-widest mb-2 px-1"
-           style={{ color: FOREST_LIGHT }}>{t('badges')}</p>
+           style={{ color: EMER }}>{t('badges')}</p>
         <div className="bg-white rounded-2xl p-4"
-             style={{ border: `1px solid rgba(79,160,149,0.18)` }}>
+             style={{ border: `1px solid ${VERRE}40` }}>
           <div className="flex justify-around">
-            <AchievementBadge icon={Sunrise}  label={t('badgeEarlyBird')} unlocked={earlyBird} color="#f59e0b" />
-            <AchievementBadge icon={Flame}    label={t('badgeOnFire')}    unlocked={onFire}    color="#ef4444" />
-            <AchievementBadge icon={MoonIcon} label={t('badgeNightOwl')}  unlocked={nightOwl}  color={FOREST_LIGHT} />
-            <AchievementBadge icon={MapPin}   label={t('badgeExplorer')}  unlocked={user.reports >= 1} color={MINT} />
+            <AchievementBadge icon={Sunrise}  label={t('badgeEarlyBird')} unlocked={earlyBird} color="#d4a843" />
+            <AchievementBadge icon={Flame}    label={t('badgeOnFire')}    unlocked={onFire}    color="#c9433a" />
+            <AchievementBadge icon={MoonIcon} label={t('badgeNightOwl')}  unlocked={nightOwl}  color={EMER}   />
+            <AchievementBadge icon={MapPin}   label={t('badgeExplorer')}  unlocked={user.reports >= 1} color={EMER} />
           </div>
           <p className="text-center text-[10px] text-slate-400 mt-3 font-medium">
             {t('badgesUnlocked', [earlyBird, onFire, nightOwl, user.reports >= 1].filter(Boolean).length)}
@@ -240,9 +235,9 @@ export default function ProfileTab() {
 
       {/* ── Comment progresser ───────────────────────────────────── */}
       <Section title={t('howToProgress')}>
-        <Row icon={MapPin} label={t('actionReport')} value="+50 pts"         iconColor={MINT}         />
-        <Row icon={Flame}  label={t('actionStreak')} value={t('comingSoon')} iconColor="#ef4444"      />
-        <Row icon={Star}   label={t('actionFirst')}  value={t('comingSoon')} iconColor="#f59e0b"      />
+        <Row icon={MapPin} label={t('actionReport')} value="+50 pts"         iconColor={EMER}    />
+        <Row icon={Flame}  label={t('actionStreak')} value={t('comingSoon')} iconColor="#c9433a" />
+        <Row icon={Star}   label={t('actionFirst')}  value={t('comingSoon')} iconColor="#d4a843" />
       </Section>
 
       {/* ── Mon Compte ───────────────────────────────────────────── */}
@@ -256,7 +251,7 @@ export default function ProfileTab() {
       <Section title={t('preferences')}>
         <div className="px-4 py-3">
           <div className="flex items-center gap-2 mb-3">
-            <Globe size={15} strokeWidth={2} style={{ color: FOREST_LIGHT }} />
+            <Globe size={15} strokeWidth={2} style={{ color: EMER }} />
             <span className="text-sm font-medium text-slate-700">{t('languageLabel')}</span>
           </div>
           <div className="flex gap-2 mb-3">
@@ -264,11 +259,11 @@ export default function ProfileTab() {
               <button key={code} onClick={() => setPendingLang(code)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all"
                       style={pendingLang === code ? {
-                        background: FOREST_DEEP, color: MINT,
-                        boxShadow: `0 2px 8px rgba(21,52,98,0.25)`,
+                        background: MOUSSE, color: MENTHE,
+                        boxShadow: `0 2px 8px ${MOUSSE}40`,
                       } : {
-                        background: '#f2f6f5', color: '#64748b',
-                        border: `1px solid rgba(79,160,149,0.20)`,
+                        background: `${EMER}10`, color: LICHEN,
+                        border: `1px solid ${VERRE}60`,
                       }}>
                 <span>{flag}</span> {label}
               </button>
@@ -277,7 +272,7 @@ export default function ProfileTab() {
           {pendingLang !== lang && (
             <button onClick={() => setLanguage(pendingLang)}
                     className="w-full py-2 rounded-xl text-sm font-semibold transition-all"
-                    style={{ background: `linear-gradient(135deg,${FOREST_LIGHT},${FOREST_DEEP})`, color: CREAM }}>
+                    style={{ background: MOUSSE, color: CREME }}>
               {t('confirmBtn')}
             </button>
           )}
@@ -309,7 +304,7 @@ export default function ProfileTab() {
         </button>
       </div>
 
-      <p className="text-center text-xs pb-4 font-medium" style={{ color: `rgba(79,160,149,0.40)` }}>{t('footer')}</p>
+      <p className="text-center text-xs pb-4 font-medium" style={{ color: `${EMER}60` }}>{t('footer')}</p>
     </div>
   )
 }

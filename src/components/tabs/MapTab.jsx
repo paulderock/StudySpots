@@ -4,6 +4,7 @@ import { User, ChevronRight } from 'lucide-react'
 import Map from '../Map'
 import { isLibOpen } from '../../utils/time'
 import { useLanguage } from '../../context/LanguageContext'
+import { CREME, MENTHE, EMER, VERRE, MOUSSE, LICHEN } from '../../palette'
 
 /* ── Constantes sheet ─────────────────────────────────────────── */
 // Les boutons flottants occupent ~80px depuis le bas (bottom-8 + 52px).
@@ -16,16 +17,16 @@ const PEEK_Y  = SHEET_H - PEEK_H  // 400 — translateY en mode fermé
 /* ── Jauge de 5 icônes User ────────────────────────────────────── */
 function OccupancyGauge({ occupancy }) {
   let color, score
-  if      (occupancy >= 80) { color = '#c0392b'; score = 5 }
-  else if (occupancy >= 60) { color = '#e67e22'; score = 4 }
-  else if (occupancy >= 40) { color = '#d4ac0d'; score = 3 }
-  else if (occupancy >= 20) { color = '#27ae60'; score = 2 }
-  else                      { color = '#27ae60'; score = 1 }
+  if      (occupancy >= 80) { color = '#c9433a'; score = 5 }
+  else if (occupancy >= 60) { color = '#e07c3a'; score = 4 }
+  else if (occupancy >= 40) { color = '#d4a843'; score = 3 }
+  else if (occupancy >= 20) { color = EMER;      score = 2 }
+  else                      { color = EMER;      score = 1 }
   return (
     <div className="flex items-center gap-0.5">
       {[1,2,3,4,5].map(i => (
         <User key={i} size={12} strokeWidth={2.5}
-              style={{ color: i <= score ? color : '#d1d5db' }} />
+              style={{ color: i <= score ? color : `${VERRE}60` }} />
       ))}
       <span className="ml-1 text-[11px] font-semibold" style={{ color }}>{score}/5</span>
     </div>
@@ -47,7 +48,7 @@ function LibCard({ lib, onSelect, t }) {
     <button
       onClick={() => onSelect(lib)}
       className="w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left"
-      style={{ borderBottom: '1px solid rgba(79,160,149,0.08)' }}
+      style={{ borderBottom: `1px solid ${VERRE}30` }}
       onMouseEnter={e => e.currentTarget.style.background='rgba(79,160,149,0.04)'}
       onMouseLeave={e => e.currentTarget.style.background='transparent'}
     >
@@ -67,9 +68,9 @@ function LibCard({ lib, onSelect, t }) {
           className="absolute inset-0 items-center justify-center text-xl"
           style={{
             display: lib.imageUrl ? 'none' : 'flex',
-            background: isCafe      ? 'linear-gradient(135deg,#F0EFD8,#e4e396)'
-                      : isWorkspace ? 'linear-gradient(135deg,#6BA89A25,#4A8C8220)'
-                      :               'linear-gradient(135deg,#1C3A2E12,#4A8C8218)',
+            background: isCafe      ? `linear-gradient(135deg,${CREME},#e8e89a)`
+                      : isWorkspace ? `linear-gradient(135deg,${MENTHE}35,${EMER}25)`
+                      :               `linear-gradient(135deg,${MOUSSE}15,${EMER}20)`,
           }}
         >
           {isCafe ? '☕' : isWorkspace ? '💻' : '📚'}
@@ -78,17 +79,17 @@ function LibCard({ lib, onSelect, t }) {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm leading-snug truncate" style={{ color: '#153462' }}>{lib.name}</p>
+        <p className="font-bold text-sm leading-snug truncate" style={{ color: MOUSSE }}>{lib.name}</p>
         {lib.address && (
-          <p className="text-[11px] truncate mt-0.5" style={{ color: '#94a3b8' }}>{lib.address}</p>
+          <p className="text-[11px] truncate mt-0.5" style={{ color: LICHEN }}>{lib.address}</p>
         )}
         <div className="flex items-center gap-2 mt-1.5">
           <OccupancyGauge occupancy={lib.occupancy ?? 50} />
           {open !== null && (
             <span className="flex items-center gap-0.5">
               <span className="w-1.5 h-1.5 rounded-full shrink-0"
-                    style={{ background: open ? '#4ade80' : '#f87171' }} />
-              <span className="text-[11px] font-medium text-slate-400">
+                    style={{ background: open ? MENTHE : '#e07070' }} />
+              <span className="text-[11px] font-medium" style={{ color: LICHEN }}>
                 {open ? t('open') : t('closed')}
               </span>
             </span>
@@ -96,7 +97,7 @@ function LibCard({ lib, onSelect, t }) {
         </div>
       </div>
 
-      <ChevronRight size={14} strokeWidth={2.5} className="shrink-0" style={{ color: 'rgba(79,160,149,0.45)' }} />
+      <ChevronRight size={14} strokeWidth={2.5} className="shrink-0" style={{ color: `${VERRE}AA` }} />
     </button>
   )
 }
@@ -208,23 +209,23 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
       >
         {/* ── Handle bar ─────────────────────────────────────────── */}
         <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing select-none">
-          <div className="w-9 h-1 rounded-full" style={{ background: 'rgba(79,160,149,0.30)' }} />
+          <div className="w-9 h-1 rounded-full" style={{ background: `${VERRE}80` }} />
         </div>
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="px-4 pb-3 flex items-center justify-between">
           <div>
             <h3 className="font-black text-base tracking-tight leading-tight"
-                style={{ color: '#153462' }}>
+                style={{ color: MOUSSE }}>
               {query ? t('resultsFor', query) : t('spotsNearYou')}
             </h3>
-            <p className="text-xs font-medium mt-0.5" style={{ color: '#4FA095' }}>
+            <p className="text-xs font-medium mt-0.5" style={{ color: EMER }}>
               {t('availablePlaces', filtered.length)}
             </p>
           </div>
           {!isOpen && (
             <div className="flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 select-none"
-                 style={{ background: 'rgba(79,160,149,0.10)', color: '#4FA095' }}>
+                 style={{ background: `${EMER}15`, color: EMER }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M12 19V5M5 12l7-7 7 7"/>
@@ -235,7 +236,7 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
           {isOpen && (
             <button onClick={() => setIsOpen(false)}
                     className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(79,160,149,0.12)', color: '#4FA095' }}>
+                    style={{ background: `${EMER}15`, color: EMER }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M18 6L6 18M6 6l12 12"/>
@@ -245,7 +246,7 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
         </div>
 
         {/* ── Séparateur ─────────────────────────────────────────── */}
-        <div className="h-px" style={{ background: 'rgba(79,160,149,0.12)' }} />
+        <div className="h-px" style={{ background: `${VERRE}50` }} />
 
         {/* ── Liste scrollable ────────────────────────────────────── */}
         <div

@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-lea
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { isLibOpen } from '../utils/time'
+import { CREME, MENTHE, EMER, MOUSSE, LICHEN } from '../palette'
 
 const AMSTERDAM    = [52.3676, 4.9041]
 const DEFAULT_ZOOM = 13
@@ -10,11 +11,11 @@ const STALE_MS     = 5 * 60 * 60 * 1000
 
 /* ── Couleurs sémantiques palette Seatr ──────────────────────────── */
 function getOccupancyColor(occupancy, inactive) {
-  if (inactive) return '#b8c4be'         // gris-vert neutre
+  if (inactive) return LICHEN            // gris-vert neutre
   if (occupancy >= 80) return '#c9433a'  // rouge mat
   if (occupancy >= 60) return '#e07c3a'  // orange mat
   if (occupancy >= 40) return '#d4a843'  // moutarde mat
-  return '#4A8C82'                        // vert forêt — calme
+  return EMER                            // vert forêt — calme
 }
 
 function isStale(lastUpdated) {
@@ -35,9 +36,9 @@ function createMarkerIcon({ color, imageUrl, type, name = '', isSelected = false
   const t = (type ?? '').toLowerCase()
   const isCafe      = t.includes('caf')
   const isWorkspace = t.includes('workspace') || t.includes('cowork')
-  const fallbackBg = isCafe      ? 'linear-gradient(135deg,#F0EFD8,#e4e396)'
-                   : isWorkspace ? 'linear-gradient(135deg,#6BA89A25,#4A8C8220)'
-                   :               'linear-gradient(135deg,#1C3A2E12,#4A8C8218)'
+  const fallbackBg = isCafe      ? `linear-gradient(135deg,${CREME},#e8e89a)`
+                   : isWorkspace ? `linear-gradient(135deg,${MENTHE}35,${EMER}25)`
+                   :               `linear-gradient(135deg,${MOUSSE}15,${EMER}20)`
   const fallbackEmoji = isCafe ? '☕' : isWorkspace ? '💻' : '📚'
 
   const inner = imageUrl
@@ -97,9 +98,9 @@ function ZoomTracker({ onZoom }) {
 /* ── Icône position utilisateur (point bleu pulsant) ─────────────── */
 const USER_ICON = L.divIcon({
   html: `<div style="
-    width:18px;height:18px;background:#4A8C82;
+    width:18px;height:18px;background:${EMER};
     border-radius:50%;border:2.5px solid white;
-    box-shadow:0 0 0 5px rgba(74,140,130,0.22);
+    box-shadow:0 0 0 5px ${EMER}38;
   "></div>`,
   iconSize:   [18, 18],
   iconAnchor: [9, 9],
@@ -152,7 +153,7 @@ function LocateControl({ onLocated }) {
       >
         {state === 'loading' ? (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-               stroke="#4A8C82" strokeWidth="2.5" strokeLinecap="round"
+               stroke={EMER} strokeWidth="2.5" strokeLinecap="round"
                style={{ animation: 'spin 0.8s linear infinite' }}>
             <path d="M12 2a10 10 0 0 1 10 10" />
           </svg>
@@ -164,8 +165,8 @@ function LocateControl({ onLocated }) {
           </svg>
         ) : (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-               stroke="#4A8C82" strokeWidth="2.2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="3" fill="#4A8C82" fillOpacity="0.25"/>
+               stroke={EMER} strokeWidth="2.2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="3" fill={EMER} fillOpacity="0.25"/>
             <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
             <circle cx="12" cy="12" r="8"/>
           </svg>

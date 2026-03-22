@@ -11,13 +11,14 @@ import { useStudySpots } from './hooks/useStudySpots'
 import { UserProvider, useUser } from './context/UserContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { LanguageProvider, useLanguage } from './context/LanguageContext'
+import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, LICHEN } from './palette'
 
-/* ─── Palette unifiée ────────────────────────────────────────────── */
-const FD  = '#1C3A2E'   // Forest Deep  (vert profond mat)
-const FL  = '#4A8C82'   // Forest Light (vert forêt)
-const SAG = '#6BA89A'   // Sage         (sauge mat)
-const CRM = '#F0EFD8'   // Cream        (crème chaud)
-const BG  = '#F5F5F0'   // Background   (fond app)
+/* ─── Aliases locaux pour lisibilité ────────────────────────────── */
+const FD  = MOUSSE   // headers / fonds profonds
+const FL  = EMER     // icons / labels
+const SAG = EMER     // accents / dots
+const CRM = CREME    // texte sur foncé
+const BG  = IVOIRE   // fond app
 
 /* ─── Config notation ────────────────────────────────────────────── */
 const RATINGS_BASE = [

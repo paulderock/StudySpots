@@ -120,7 +120,7 @@ function TrendingCard({ lib, onSelect, rank, t }) {
       {/* Rang */}
       <div className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center"
            style={{ background: FOREST_DEEP }}>
-        <span className="text-[11px] font-black" style={{ color: MINT }}>#{rank}</span>
+        <span className="text-[10px] font-medium tracking-wide" style={{ color: CREAM }}>#{rank}</span>
       </div>
 
       {/* Miniature */}

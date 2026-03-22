@@ -8,6 +8,7 @@ export const translations = {
     // Chargement
     loadingSpots:   'Chargement des spots…',
     demoBanner:     '⚠️ Mode démo — configure .env pour connecter Airtable',
+    findYourSpot:   'Trouve ton spot.',
     // Statuts
     open:           'Ouvert',
     closed:         'Fermé',
@@ -119,6 +120,7 @@ export const translations = {
     daysAgo:        (n) => `${n}d ago`,
     loadingSpots:   'Loading spots…',
     demoBanner:     '⚠️ Demo mode — configure .env to connect Airtable',
+    findYourSpot:   'Find your spot.',
     open:           'Open',
     closed:         'Closed',
     openBadge:      'Open',

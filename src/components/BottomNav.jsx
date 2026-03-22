@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext'
-import { MOUSSE, VERRE } from '../palette'
+import { EMER, MOUSSE, BORDER } from '../palette'
 
 function IconExplore({ active }) {
   return (
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
-         stroke={active ? MOUSSE : '#94a3b8'}
+         stroke={active ? EMER : '#94a3b8'}
          strokeWidth={active ? 2.2 : 1.8}
          strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
@@ -17,7 +17,7 @@ function IconExplore({ active }) {
 function IconMap({ active }) {
   return (
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
-         stroke={active ? MOUSSE : '#94a3b8'}
+         stroke={active ? EMER : '#94a3b8'}
          strokeWidth={active ? 2.2 : 1.8}
          strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8"/>
@@ -29,7 +29,7 @@ function IconMap({ active }) {
 function IconProfile({ active }) {
   return (
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
-         stroke={active ? MOUSSE : '#94a3b8'}
+         stroke={active ? EMER : '#94a3b8'}
          strokeWidth={active ? 2.2 : 1.8}
          strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
@@ -71,11 +71,11 @@ export default function BottomNav({ active, onChange }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: isActive
-                  ? `0 6px 20px ${MOUSSE}30, 0 2px 6px rgba(0,0,0,0.10)`
-                  : `0 4px 14px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)`,
+                  ? `0 6px 20px rgba(21,52,98,0.15), 0 2px 6px rgba(0,0,0,0.08)`
+                  : `0 4px 14px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05)`,
                 border: isActive
-                  ? `1.5px solid ${VERRE}80`
-                  : `1px solid rgba(0,0,0,0.07)`,
+                  ? `1.5px solid ${BORDER}`
+                  : `1px solid ${BORDER}`,
               }}
             >
               <Icon active={isActive} />
@@ -84,7 +84,7 @@ export default function BottomNav({ active, onChange }) {
             {/* Label sous le rond */}
             <span
               className="text-[10px] font-semibold leading-none"
-              style={{ color: isActive ? MOUSSE : '#9CA3AF' }}
+              style={{ color: isActive ? EMER : '#9CA3AF' }}
             >
               {t(key)}
             </span>

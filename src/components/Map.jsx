@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-lea
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { isLibOpen } from '../utils/time'
-import { CREME, MENTHE, EMER, MOUSSE, LICHEN } from '../palette'
+import { CREME, MENTHE, EMER, MOUSSE } from '../palette'
 
 const AMSTERDAM    = [52.3676, 4.9041]
 const DEFAULT_ZOOM = 13
@@ -11,7 +11,7 @@ const STALE_MS     = 5 * 60 * 60 * 1000
 
 /* ── Couleurs sémantiques palette Seatr ──────────────────────────── */
 function getOccupancyColor(occupancy, inactive) {
-  if (inactive) return LICHEN            // gris-vert neutre
+  if (inactive) return '#D1D5DB'          // gris froid neutre
   if (occupancy >= 80) return '#c9433a'  // rouge mat
   if (occupancy >= 60) return '#e07c3a'  // orange mat
   if (occupancy >= 40) return '#d4a843'  // moutarde mat
@@ -36,9 +36,9 @@ function createMarkerIcon({ color, imageUrl, type, name = '', isSelected = false
   const t = (type ?? '').toLowerCase()
   const isCafe      = t.includes('caf')
   const isWorkspace = t.includes('workspace') || t.includes('cowork')
-  const fallbackBg = isCafe      ? `linear-gradient(135deg,${CREME},#e8e89a)`
+  const fallbackBg = isCafe      ? `linear-gradient(135deg,#FFF9ED,#FFF0C4)`
                    : isWorkspace ? `linear-gradient(135deg,${MENTHE}35,${EMER}25)`
-                   :               `linear-gradient(135deg,${MOUSSE}15,${EMER}20)`
+                   :               `linear-gradient(135deg,${MOUSSE}10,${EMER}18)`
   const fallbackEmoji = isCafe ? '☕' : isWorkspace ? '💻' : '📚'
 
   const inner = imageUrl

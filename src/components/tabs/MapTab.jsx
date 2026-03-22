@@ -4,7 +4,7 @@ import { User, ChevronRight } from 'lucide-react'
 import Map from '../Map'
 import { isLibOpen } from '../../utils/time'
 import { useLanguage } from '../../context/LanguageContext'
-import { CREME, MENTHE, EMER, VERRE, MOUSSE, LICHEN } from '../../palette'
+import { CREME, MENTHE, EMER, VERRE, MOUSSE, MUTED, BORDER } from '../../palette'
 
 /* ── Constantes sheet ─────────────────────────────────────────── */
 // Les boutons flottants occupent ~80px depuis le bas (bottom-8 + 52px).
@@ -26,7 +26,7 @@ function OccupancyGauge({ occupancy }) {
     <div className="flex items-center gap-0.5">
       {[1,2,3,4,5].map(i => (
         <User key={i} size={12} strokeWidth={2.5}
-              style={{ color: i <= score ? color : `${VERRE}60` }} />
+              style={{ color: i <= score ? color : BORDER }} />
       ))}
       <span className="ml-1 text-[11px] font-semibold" style={{ color }}>{score}/5</span>
     </div>
@@ -48,7 +48,7 @@ function LibCard({ lib, onSelect, t }) {
     <button
       onClick={() => onSelect(lib)}
       className="w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left"
-      style={{ borderBottom: `1px solid ${VERRE}30` }}
+      style={{ borderBottom: `1px solid ${BORDER}` }}
       onMouseEnter={e => e.currentTarget.style.background='rgba(79,160,149,0.04)'}
       onMouseLeave={e => e.currentTarget.style.background='transparent'}
     >
@@ -81,7 +81,7 @@ function LibCard({ lib, onSelect, t }) {
       <div className="flex-1 min-w-0">
         <p className="font-bold text-sm leading-snug truncate" style={{ color: MOUSSE }}>{lib.name}</p>
         {lib.address && (
-          <p className="text-[11px] truncate mt-0.5" style={{ color: LICHEN }}>{lib.address}</p>
+          <p className="text-[11px] truncate mt-0.5" style={{ color: MUTED }}>{lib.address}</p>
         )}
         <div className="flex items-center gap-2 mt-1.5">
           <OccupancyGauge occupancy={lib.occupancy ?? 50} />
@@ -89,7 +89,7 @@ function LibCard({ lib, onSelect, t }) {
             <span className="flex items-center gap-0.5">
               <span className="w-1.5 h-1.5 rounded-full shrink-0"
                     style={{ background: open ? MENTHE : '#e07070' }} />
-              <span className="text-[11px] font-medium" style={{ color: LICHEN }}>
+              <span className="text-[11px] font-medium" style={{ color: MUTED }}>
                 {open ? t('open') : t('closed')}
               </span>
             </span>
@@ -97,7 +97,7 @@ function LibCard({ lib, onSelect, t }) {
         </div>
       </div>
 
-      <ChevronRight size={14} strokeWidth={2.5} className="shrink-0" style={{ color: `${VERRE}AA` }} />
+      <ChevronRight size={14} strokeWidth={2.5} className="shrink-0" style={{ color: MUTED }} />
     </button>
   )
 }

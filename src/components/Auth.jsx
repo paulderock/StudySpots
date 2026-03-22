@@ -4,21 +4,27 @@ import { Mail, Lock, User, Phone, ArrowRight, Loader2, CheckCircle2 } from 'luci
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 
-/* ── Palette ──────────────────────────────────────────────────── */
-const P = {
-  cream:       '#FFFFFF',    // blanc pur — Cold Premium
-  mint:        '#8AD1C2',
-  forestLight: '#4FA095',
-  forestDeep:  '#153462',
+/* ── Dark academic palette (login screen only) ────────────────── */
+const D = {
+  bg:       '#031425',
+  surface:  '#0f2131',
+  high:     '#1a2b3c',
+  top:      '#253648',
+  primary:  '#b7c8de',
+  text:     '#d2e4fb',
+  muted:    '#c4c6cd',
+  outline:  '#8e9197',
+  outVar:   '#44474c',
+  onPrimary: '#213243',
 }
 
-/* ── Champ de saisie ─────────────────────────────────────────── */
+/* ── Input field ──────────────────────────────────────────────── */
 function Field({ icon: Icon, type = 'text', placeholder, value, onChange, autoComplete }) {
   return (
     <div className="relative">
-      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-            style={{ color: 'rgba(138,209,194,0.65)' }}>
-        <Icon size={15} strokeWidth={1.8} />
+      <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: D.muted }}>
+        <Icon size={15} strokeWidth={1.6} />
       </span>
       <input
         type={type}
@@ -26,65 +32,54 @@ function Field({ icon: Icon, type = 'text', placeholder, value, onChange, autoCo
         value={value}
         onChange={e => onChange(e.target.value)}
         autoComplete={autoComplete}
-        className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all"
+        className="w-full pl-10 pr-4 py-3 text-sm outline-none transition-all"
         style={{
-          background: 'rgba(15,35,65,0.55)',
-          border: '1px solid rgba(79,160,149,0.22)',
-          color: P.cream,
+          background: `rgba(37,54,72,0.40)`,
+          border: `1px solid rgba(68,71,76,0.30)`,
+          borderRadius: '0.375rem',
+          color: D.text,
+          fontFamily: "'Manrope', system-ui, sans-serif",
+          letterSpacing: '0.01em',
         }}
         onFocus={e => {
-          e.target.style.border = `1px solid rgba(138,209,194,0.60)`
-          e.target.style.background = 'rgba(15,35,65,0.70)'
+          e.target.style.border = `1px solid rgba(183,200,222,0.45)`
+          e.target.style.background = `rgba(37,54,72,0.65)`
         }}
         onBlur={e => {
-          e.target.style.border = '1px solid rgba(79,160,149,0.22)'
-          e.target.style.background = 'rgba(15,35,65,0.55)'
+          e.target.style.border = `1px solid rgba(68,71,76,0.30)`
+          e.target.style.background = `rgba(37,54,72,0.40)`
         }}
       />
-      <style>{`input::placeholder { color: rgba(138,209,194,0.40); font-size: 13px; }`}</style>
+      <style>{`input::placeholder { color: rgba(196,198,205,0.45); font-size: 13px; }`}</style>
     </div>
   )
 }
 
-/* ── Logo SVG mark ───────────────────────────────────────────── */
-function SeatrMark() {
-  return (
-    <svg width="48" height="48" viewBox="0 0 52 52" fill="none"
-         style={{ filter: `drop-shadow(0 0 12px rgba(138,209,194,0.55))` }}>
-      <path
-        d="M26 4C17.716 4 11 10.716 11 19c0 5.48 2.8 10.3 7.06 13.18L26 48l7.94-15.82C38.2 29.3 41 24.48 41 19c0-8.284-6.716-15-15-15z"
-        stroke={P.mint} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"
-      />
-      <path
-        d="M20 22c0-3.314 2.686-6 6-6s6 2.686 6 6"
-        stroke={P.mint} strokeWidth="2.2" strokeLinecap="round" fill="none"
-      />
-      <line x1="19" y1="24.5" x2="33" y2="24.5" stroke={P.mint} strokeWidth="2.2" strokeLinecap="round"/>
-      <line x1="21" y1="24.5" x2="21" y2="29" stroke={P.mint} strokeWidth="2" strokeLinecap="round"/>
-      <line x1="31" y1="24.5" x2="31" y2="29" stroke={P.mint} strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  )
-}
-
+/* ── Logo ─────────────────────────────────────────────────────── */
 function Logo({ t }) {
   return (
-    <div className="text-center mb-5">
-      <div className="flex items-center justify-center mb-3">
-        <SeatrMark />
-      </div>
+    <div className="text-center mb-7">
+      {/* Wordmark — Newsreader serif italic */}
       <h1 style={{
-        fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-        fontSize: '28px',
-        fontWeight: 800,
-        letterSpacing: '-0.04em',
-        color: P.mint,
+        fontFamily: "'Newsreader', 'Georgia', serif",
+        fontSize: '38px',
+        fontWeight: 300,
+        fontStyle: 'italic',
+        letterSpacing: '-0.03em',
+        color: D.primary,
         lineHeight: 1,
-        marginBottom: '6px',
-        textShadow: `0 0 28px rgba(138,209,194,0.40)`,
+        marginBottom: '8px',
       }}>
         Seatr
       </h1>
-      <p style={{ fontSize: '11.5px', color: `rgba(246,246,201,0.55)`, fontWeight: 400, letterSpacing: '0.015em' }}>
+      <p style={{
+        fontFamily: "'Manrope', system-ui, sans-serif",
+        fontSize: '10px',
+        letterSpacing: '0.30em',
+        textTransform: 'uppercase',
+        color: `rgba(196,198,205,0.50)`,
+        fontWeight: 500,
+      }}>
         {t('tagline')}
       </p>
     </div>
@@ -103,7 +98,7 @@ function GoogleIcon() {
   )
 }
 
-/* ── Composant principal ─────────────────────────────────────── */
+/* ── Main component ───────────────────────────────────────────── */
 export default function Auth() {
   const { signIn, signUp, signInWithGoogle, error, setError } = useAuth()
   const { t } = useLanguage()
@@ -122,8 +117,7 @@ export default function Auth() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     if (mode === 'login') {
       await signIn(email, password)
     } else {
@@ -140,33 +134,27 @@ export default function Auth() {
   }
 
   return (
-    <div className="fixed inset-0" style={{ fontFamily: "'Inter', sans-serif", zIndex: 9999 }}>
+    <div className="fixed inset-0" style={{ fontFamily: "'Manrope', system-ui, sans-serif", zIndex: 9999 }}>
 
-      {/* Layer 1 — Library image, sharp, full viewport */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/bg-library.jpg')", filter: 'brightness(0.80)' }}
-      />
+      {/* Background — deep midnight + library photo */}
+      <div className="absolute inset-0 bg-cover bg-center"
+           style={{ backgroundImage: "url('/bg-library.jpg')", filter: 'brightness(0.55)' }} />
+      <div className="absolute inset-0"
+           style={{ background: 'rgba(3,20,37,0.72)' }} />
 
-      {/* Layer 2 — Forest green wash to unify the palette */}
-      <div
-        className="absolute inset-0"
-        style={{ background: 'rgba(28,58,46,0.58)' }}
-      />
-
-      {/* Layer 3 — Centered card */}
+      {/* Centered card */}
       <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
         <motion.div
-          className="w-full max-w-xs p-5"
+          className="w-full max-w-xs"
           style={{
-            background: 'rgba(15,30,60,0.52)',
-            backdropFilter: 'blur(22px)',
-            WebkitBackdropFilter: 'blur(22px)',
-            borderRadius: '24px',
-            /* Top edge glows mint — simulates a light source from above */
-            border: '1px solid rgba(79,160,149,0.20)',
-            borderTop: '1px solid rgba(138,209,194,0.30)',
-            boxShadow: '0 25px 60px -12px rgba(10,20,50,0.70), 0 0 0 0.5px rgba(138,209,194,0.08)',
+            background: 'rgba(11,29,45,0.78)',
+            backdropFilter: 'blur(28px)',
+            WebkitBackdropFilter: 'blur(28px)',
+            borderRadius: '0.375rem',
+            border: `1px solid rgba(68,71,76,0.20)`,
+            borderTop: `1px solid rgba(183,200,222,0.15)`,
+            boxShadow: `0 32px 64px rgba(0,15,31,0.50), 0 0 0 0.5px rgba(183,200,222,0.06)`,
+            padding: '2rem 1.75rem',
           }}
           initial={{ opacity: 0, y: 52 }}
           animate={{ opacity: 1, y: 0 }}
@@ -174,16 +162,21 @@ export default function Auth() {
         >
           <Logo t={t} />
 
-          {/* Tabs */}
-          <div className="flex gap-6 justify-center mb-5">
+          {/* Tabs — Newsreader serif style */}
+          <div className="flex gap-8 justify-center mb-6">
             {['login', 'signup'].map(m => (
               <button
                 key={m}
                 onClick={() => switchMode(m)}
-                className="pb-1.5 text-sm font-semibold transition-all duration-150"
+                className="pb-1.5 transition-all duration-150"
                 style={{
-                  color:        mode === m ? P.mint : `rgba(246,246,201,0.40)`,
-                  borderBottom: mode === m ? `2px solid ${P.mint}` : '2px solid transparent',
+                  fontFamily: "'Newsreader', Georgia, serif",
+                  fontSize: '20px',
+                  fontWeight: mode === m ? 400 : 300,
+                  fontStyle: 'italic',
+                  color: mode === m ? D.primary : `rgba(196,198,205,0.35)`,
+                  borderBottom: mode === m ? `1.5px solid ${D.primary}` : '1.5px solid transparent',
+                  letterSpacing: '-0.01em',
                 }}
               >
                 {m === 'login' ? t('loginTab') : t('signupTab')}
@@ -200,16 +193,16 @@ export default function Auth() {
                 className="text-center py-6"
               >
                 <CheckCircle2 size={40} className="mx-auto mb-3" strokeWidth={1.5}
-                              style={{ color: P.mint }} />
-                <p className="font-semibold text-sm" style={{ color: P.cream }}>{t('checkEmail')}</p>
-                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: `rgba(246,246,201,0.60)` }}>
+                              style={{ color: D.primary }} />
+                <p className="font-semibold text-sm" style={{ color: D.text }}>{t('checkEmail')}</p>
+                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: `rgba(196,198,205,0.65)` }}>
                   {t('confirmSent')}<br />
-                  <span className="font-medium" style={{ color: P.cream }}>{email}</span>
+                  <span className="font-medium" style={{ color: D.text }}>{email}</span>
                 </p>
                 <button
                   onClick={() => { setDone(false); switchMode('login') }}
                   className="mt-5 text-xs font-medium underline underline-offset-2"
-                  style={{ color: P.mint }}
+                  style={{ color: D.primary }}
                 >
                   {t('backToLogin')}
                 </button>
@@ -217,12 +210,12 @@ export default function Auth() {
             ) : (
               <motion.form
                 key={mode}
-                initial={{ opacity: 0, x: mode === 'login' ? -12 : 12 }}
+                initial={{ opacity: 0, x: mode === 'login' ? -10 : 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.18 }}
                 onSubmit={handleSubmit}
-                className="space-y-2.5"
+                className="space-y-3"
               >
                 {mode === 'signup' && (
                   <>
@@ -237,32 +230,37 @@ export default function Auth() {
                   <p className="text-xs text-center px-1" style={{ color: '#fca5a5' }}>{error}</p>
                 )}
 
-                {/* Bouton principal */}
+                {/* Primary CTA — solid primary */}
                 <motion.button
                   type="submit"
                   disabled={loading}
                   whileTap={{ scale: 0.97 }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
-                             text-sm font-bold mt-1 transition-opacity"
+                  className="w-full flex items-center justify-center gap-2 py-3 mt-1 transition-opacity"
                   style={{
-                    background: `linear-gradient(135deg, ${P.forestLight} 0%, #3d8a80 100%)`,
-                    color: P.cream,
-                    boxShadow: `0 6px 28px rgba(79,160,149,0.45), 0 0 0 1px rgba(79,160,149,0.20)`,
+                    background: D.primary,
+                    color: D.onPrimary,
+                    borderRadius: '0.375rem',
+                    fontFamily: "'Manrope', system-ui, sans-serif",
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
                     opacity: loading ? 0.7 : 1,
-                    letterSpacing: '0.01em',
                   }}
                 >
                   {loading
                     ? <Loader2 size={16} className="animate-spin" />
-                    : <>{mode === 'login' ? t('loginBtn') : t('signupBtn')}<ArrowRight size={14} strokeWidth={2.5} /></>
+                    : <>{mode === 'login' ? t('loginBtn') : t('signupBtn')} <ArrowRight size={13} strokeWidth={2.5} /></>
                   }
                 </motion.button>
 
-                {/* Séparateur */}
-                <div className="flex items-center gap-3 py-0.5">
-                  <div className="flex-1 h-px" style={{ background: 'rgba(79,160,149,0.22)' }} />
-                  <span className="text-[11px] font-medium" style={{ color: 'rgba(138,209,194,0.45)' }}>{t('orSeparator')}</span>
-                  <div className="flex-1 h-px" style={{ background: 'rgba(79,160,149,0.22)' }} />
+                {/* Divider */}
+                <div className="flex items-center gap-3 py-1">
+                  <div className="flex-1 h-px" style={{ background: `rgba(68,71,76,0.40)` }} />
+                  <span style={{ fontSize: '10px', fontWeight: 500, color: `rgba(142,145,151,0.70)`, letterSpacing: '0.10em' }}>
+                    {t('orSeparator')}
+                  </span>
+                  <div className="flex-1 h-px" style={{ background: `rgba(68,71,76,0.40)` }} />
                 </div>
 
                 {/* Google */}
@@ -271,12 +269,14 @@ export default function Auth() {
                   onClick={handleGoogle}
                   disabled={googleLoading}
                   whileTap={{ scale: 0.97 }}
-                  className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl
-                             text-sm font-semibold transition-all"
+                  className="w-full flex items-center justify-center gap-2.5 py-3 transition-all"
                   style={{
-                    background: 'rgba(246,246,201,0.06)',
-                    border: `1px solid rgba(246,246,201,0.18)`,
-                    color: `rgba(246,246,201,0.85)`,
+                    background: 'transparent',
+                    border: `1px solid rgba(68,71,76,0.35)`,
+                    borderRadius: '0.375rem',
+                    color: `rgba(210,228,251,0.80)`,
+                    fontSize: '13px',
+                    fontWeight: 500,
                     opacity: googleLoading ? 0.7 : 1,
                   }}
                 >
@@ -289,7 +289,13 @@ export default function Auth() {
             )}
           </AnimatePresence>
 
-          <p className="text-center text-[10px] mt-5" style={{ color: 'rgba(138,209,194,0.30)' }}>
+          <p className="text-center mt-6" style={{
+            fontSize: '10px',
+            letterSpacing: '0.20em',
+            textTransform: 'uppercase',
+            color: `rgba(142,145,151,0.35)`,
+            fontFamily: "'Manrope', system-ui, sans-serif",
+          }}>
             {t('authFooter')}
           </p>
         </motion.div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star, BookOpen, Coffee, Zap, Lock, Monitor } from 'lucide-react'
+import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star, BookOpen, Coffee, Zap, Lock, Monitor, Wifi, CheckCircle2, ArrowLeft, X } from 'lucide-react'
 import { isLibOpen, formatHours } from './utils/time'
 import BottomNav from './components/BottomNav'
 import ExploreTab from './components/tabs/ExploreTab'
@@ -14,11 +14,32 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext'
 import { CREME, IVOIRE, MENTHE, EMER, VERRE, MOUSSE, MUTED, BORDER } from './palette'
 
 /* ─── Aliases locaux pour lisibilité ────────────────────────────── */
-const FD  = MOUSSE   // navy profond — headers, textes forts
-const FL  = EMER     // icons / labels
-const SAG = EMER     // accents / dots
-const CRM = CREME    // blanc pur — texte sur foncé
-const BG  = IVOIRE   // ivoire froid — fond app
+const FD  = MOUSSE
+const FL  = EMER
+const SAG = EMER
+const CRM = CREME
+const BG  = IVOIRE
+
+/* ─── Design tokens (Stitch Lumina palette) ─────────────────────── */
+const D = {
+  bg:          '#f5f6ff',
+  surfaceTop:  '#ffffff',
+  surfaceLow:  '#edf0ff',
+  primary:     '#005da4',
+  primaryCont: '#4fa4ff',
+  secondary:   '#00694d',
+  secCont:     '#60fcc6',
+  onSecCont:   '#005e44',
+  tertiary:    '#6e5900',
+  tertCont:    '#fcd43e',
+  error:       '#b31b25',
+  errCont:     '#fb5151',
+  text:        '#1c2e51',
+  muted:       '#4a5b80',
+  outline:     '#65779d',
+  outlineVar:  '#9badd7',
+  surfaceVar:  '#d0ddff',
+}
 
 /* ─── Config notation ────────────────────────────────────────────── */
 const RATINGS_BASE = [
@@ -331,17 +352,57 @@ function ReportButton({ onPress }) {
   )
 }
 
-/* ─── Panneau détail bibliothèque ────────────────────────────────── */
-function LibrarySheet({ lib, onClose, onReport }) {
+/* ─── Occupancy meta (Stitch semantic colors) ────────────────────── */
+function getOccMeta(occ) {
+  if (occ >= 80) return { score: 5, color: D.error,    label: 'At Capacity', bg: `${D.errCont}20`,  textColor: D.error    }
+  if (occ >= 60) return { score: 4, color: '#c9433a',  label: 'Busy',        bg: 'rgba(201,67,58,0.12)', textColor: '#c9433a' }
+  if (occ >= 40) return { score: 3, color: D.tertiary, label: 'Buzzing',     bg: `${D.tertCont}45`, textColor: D.tertiary }
+  if (occ >= 20) return { score: 2, color: D.secondary,label: 'Quiet',       bg: `${D.secCont}40`,  textColor: D.secondary }
+  return               { score: 1, color: D.secondary, label: 'Very quiet',   bg: `${D.secCont}35`,  textColor: D.secondary }
+}
+
+/* ─── 5-person pip row (Stitch style) ───────────────────────────── */
+function PersonPips({ score, color }) {
+  return (
+    <div className="flex items-center gap-1">
+      {[1,2,3,4,5].map(i => (
+        <svg key={i} width="18" height="22" viewBox="0 0 18 22" fill="none">
+          <circle cx="9" cy="6" r="4.5"
+            fill={i <= score ? color : 'none'}
+            stroke={i <= score ? color : D.surfaceVar}
+            strokeWidth="1.5"/>
+          <path d="M1.5 21c0-4.142 3.358-7.5 7.5-7.5s7.5 3.358 7.5 7.5"
+            stroke={i <= score ? color : D.surfaceVar}
+            strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+        </svg>
+      ))}
+    </div>
+  )
+}
+
+/* ─── Icon circle helper ─────────────────────────────────────────── */
+function IconCircle({ children }) {
+  return (
+    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+         style={{ background: `rgba(0,93,164,0.10)` }}>
+      <span style={{ color: D.primary, display: 'flex' }}>{children}</span>
+    </div>
+  )
+}
+
+/* ─── Panneau détail bibliothèque — Stitch Study Spot Detail ────── */
+function LibrarySheet({ lib, onClose, onReport, isFullScreen }) {
   const { t } = useLanguage()
   const [view, setView] = useState('detail')
   useEffect(() => { setView('detail') }, [lib?.id])
 
-  const color    = getHeatColor(lib.occupancy)
-  const label    = getOccupancyLabel(lib.occupancy, t)
+  const occ      = lib.occupancy ?? 50
+  const occMeta  = getOccMeta(occ)
   const open     = isLibOpen(lib.openingTime, lib.closingTime)
   const hours    = formatHours(lib.openingTime, lib.closingTime)
   const canReport = open !== false
+  const isCafe   = (lib.type ?? '').toLowerCase().includes('caf')
+  const isWork   = (lib.type ?? '').toLowerCase().includes('workspace') || (lib.type ?? '').toLowerCase().includes('cowork')
 
   if (view === 'success') return <SuccessView onClose={onClose} />
   if (view === 'report') {
@@ -358,150 +419,208 @@ function LibrarySheet({ lib, onClose, onReport }) {
   }
 
   return (
-    <div className="pb-8">
-
+    <div style={{
+      height: '100%', background: D.bg, scrollbarWidth: 'none',
+      overflowY: isFullScreen ? 'auto' : 'hidden',
+    }}>
       {/* ── Hero image ────────────────────────────────────────────── */}
-      <div className="relative w-full h-52 overflow-hidden rounded-t-[32px]">
-
+      <div className="relative w-full overflow-hidden" style={{ height: 260 }}>
+        {/* Drag handle overlaid on top of the image */}
+        <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 z-20 select-none pointer-events-none">
+          <div style={{ width: 40, height: 5, borderRadius: 9999, background: 'rgba(255,255,255,0.55)' }} />
+        </div>
         {lib.imageUrl ? (
           <img src={lib.imageUrl} alt={lib.name}
-               className="w-full h-full object-cover"
-               onError={(e) => {
-                 e.currentTarget.style.display = 'none'
-                 e.currentTarget.nextSibling.style.display = 'flex'
-               }} />
+               className="absolute inset-0 w-full h-full object-cover"
+               onError={e => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex' }} />
         ) : null}
-        <div style={{ display: lib.imageUrl ? 'none' : 'flex' }} className="w-full h-full">
+        <div className="absolute inset-0 flex"
+             style={{ display: lib.imageUrl ? 'none' : 'flex' }}>
           <PlaceholderImage type={lib.type} />
         </div>
-
-        {/* Dégradé bas */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
-
-        {/* Handle bar */}
-        <div className="absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
-          <div className="w-9 h-1 rounded-full bg-white/50" />
-        </div>
-
-        {/* Badge ouvert/fermé */}
-        <div className="absolute top-3 left-3">
-          <OpenBadge openingTime={lib.openingTime} closingTime={lib.closingTime} />
-        </div>
-
-        {/* Bouton fermeture */}
-        <button onClick={onClose}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full
-                     flex items-center justify-center text-white text-sm
-                     transition-colors"
-          style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}>
-          ✕
-        </button>
-
-        {/* Titre + vibe sur l'image */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
-          {lib.vibe && (
-            <p className="text-white/70 text-xs font-medium mb-1 tracking-wide">{lib.vibe}</p>
-          )}
-          <h2 className="text-white text-xl font-bold leading-tight tracking-tight drop-shadow-lg">
-            {lib.name}
-          </h2>
+        {/* Gradient vignette */}
+        <div className="absolute inset-0 pointer-events-none"
+             style={{ background: 'linear-gradient(to top, rgba(245,246,255,0.45) 0%, transparent 60%)' }} />
+        {/* Nav overlays */}
+        <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-5 z-10">
+          <button onClick={onClose}
+                  className="w-11 h-11 flex items-center justify-center rounded-full transition-transform active:scale-90"
+                  style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(16px)', boxShadow: '0 2px 8px rgba(28,46,81,0.12)' }}>
+            <ArrowLeft size={18} strokeWidth={2} style={{ color: D.text }} />
+          </button>
+          <button onClick={onClose}
+                  className="w-11 h-11 flex items-center justify-center rounded-full transition-transform active:scale-90"
+                  style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(16px)', boxShadow: '0 2px 8px rgba(28,46,81,0.12)' }}>
+            <X size={18} strokeWidth={2} style={{ color: D.text }} />
+          </button>
         </div>
       </div>
 
-      {/* ── Contenu ───────────────────────────────────────────────── */}
-      <div className="px-4 pt-4">
+      {/* ── Content canvas — overlaps hero ──────────────────────────── */}
+      <div className="relative px-4 pb-10" style={{ marginTop: -36, zIndex: 20 }}>
+        <div className="space-y-4 max-w-lg mx-auto">
 
-        {/* Badges */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {lib.type && <TypeBadge type={lib.type} />}
-          {lib.lastUpdated ? (
-            <span className="inline-flex items-center gap-1 text-xs font-medium rounded-full px-2.5 py-0.5 border"
-                  style={isStale(lib.lastUpdated)
-                    ? { color: '#9CA3AF', background: '#F9FAFB', borderColor: '#E5E7EB' }
-                    : { color: EMER, background: `${EMER}12`, borderColor: `${EMER}30` }}>
-              {isStale(lib.lastUpdated)
-                ? <Clock size={11} strokeWidth={2} />
-                : <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: SAG }} />}
-              {formatTimeAgo(lib.lastUpdated, t)}
+          {/* Identity card */}
+          <section style={{
+            background: D.surfaceTop, borderRadius: '1rem', padding: '1.5rem',
+            boxShadow: '0 8px 32px rgba(28,46,81,0.06)',
+          }}>
+            {/* Status badge */}
+            <span className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider"
+                  style={{
+                    background: occMeta.bg, color: occMeta.textColor,
+                    borderRadius: '0.25rem', padding: '4px 10px',
+                    fontSize: '11px', fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}>
+              <CheckCircle2 size={13} strokeWidth={2.5} />
+              {occMeta.label}
+              {!isStale(lib.lastUpdated) && lib.lastUpdated && (
+                <span className="normal-case tracking-normal font-normal opacity-70 ml-1">
+                  · {formatTimeAgo(lib.lastUpdated, t)}
+                </span>
+              )}
             </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-xs font-medium rounded-full px-2.5 py-0.5"
-                  style={{ color: '#94a3b8', background: `${FD}08`, border: `1px solid rgba(0,0,0,0.07)` }}>
-              <Clock size={11} strokeWidth={2} /> {t('noReport')}
-            </span>
-          )}
-        </div>
 
-        {/* Infos pratiques */}
-        <div className="rounded-2xl overflow-hidden divide-y mb-4"
-             style={{ background: BG, border: `1px solid rgba(0,0,0,0.07)`, divideColor: 'rgba(0,0,0,0.05)' }}>
+            {/* Name */}
+            <h1 style={{
+              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              fontSize: '26px', fontWeight: 800, letterSpacing: '-0.02em',
+              color: D.text, lineHeight: 1.15, marginTop: 10, marginBottom: 6,
+            }}>
+              {lib.name}
+            </h1>
 
-          {lib.address && (
-            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lib.address)}`}
-               target="_blank" rel="noopener noreferrer"
-               className="flex items-start gap-3 px-4 py-3 transition-colors"
-               style={{ borderBottom: `1px solid rgba(0,0,0,0.05)` }}>
-              <MapPin size={14} className="mt-0.5 shrink-0" style={{ color: SAG }} />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold uppercase tracking-wider mb-0.5"
-                   style={{ color: `${FD}60` }}>{t('address')}</p>
-                <p className="text-sm leading-snug" style={{ color: FD }}>{lib.address}</p>
-              </div>
-              <span className="text-xs self-center shrink-0" style={{ color: SAG }}>↗</span>
-            </a>
-          )}
+            {/* Address */}
+            {lib.address && (
+              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lib.address)}`}
+                 target="_blank" rel="noopener noreferrer"
+                 className="flex items-center gap-2 transition-opacity active:opacity-70">
+                <MapPin size={15} strokeWidth={1.8} style={{ color: D.outline, flexShrink: 0 }} />
+                <p className="text-sm font-medium" style={{ color: D.muted }}>{lib.address}</p>
+                <span className="text-xs ml-auto shrink-0" style={{ color: D.primary }}>↗</span>
+              </a>
+            )}
 
-          {hours && (
-            <div className="flex items-center gap-3 px-4 py-3"
-                 style={{ borderBottom: lib.highlight ? `1px solid rgba(0,0,0,0.05)` : 'none' }}>
-              <Clock size={14} className="shrink-0" style={{ color: SAG }} />
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider mb-0.5"
-                   style={{ color: `${FD}60` }}>{t('hours')}</p>
-                <p className="text-sm" style={{ color: FD }}>{hours}</p>
+            {/* Live Occupancy */}
+            <div className="mt-6 pt-5" style={{ borderTop: `1px solid rgba(155,173,215,0.18)` }}>
+              <div className="flex justify-between items-end">
+                <div>
+                  <p style={{
+                    fontFamily: "'Manrope', system-ui, sans-serif",
+                    fontSize: '10px', fontWeight: 700, textTransform: 'uppercase',
+                    letterSpacing: '0.16em', color: D.muted, marginBottom: 8,
+                  }}>
+                    Live Occupancy
+                  </p>
+                  <PersonPips score={occMeta.score} color={occMeta.color} />
+                </div>
+                <p className="text-sm font-semibold" style={{ color: D.secondary }}>
+                  {occ < 40 ? t('occupancyVeryCalm') : occ < 60 ? t('occupancyCalm') : occ < 80 ? t('occupancyBusy') : t('occupancyVeryBusy')}
+                </p>
               </div>
             </div>
-          )}
+          </section>
 
+          {/* Info bento grid — 2 columns */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Hours card */}
+            <div className="flex items-start gap-3 p-5" style={{
+              background: D.surfaceLow, borderRadius: '1rem',
+            }}>
+              <IconCircle><Clock size={18} strokeWidth={1.8} /></IconCircle>
+              <div>
+                <p style={{
+                  fontFamily: "'Manrope', system-ui, sans-serif",
+                  fontSize: '10px', fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.14em', color: D.muted, marginBottom: 4,
+                }}>
+                  Hours
+                </p>
+                <p className="font-bold text-sm" style={{ color: D.text }}>
+                  {hours ?? (open === null ? '—' : open ? 'Open' : 'Closed')}
+                </p>
+                {open !== null && (
+                  <p className="text-xs mt-0.5 font-medium" style={{ color: open ? D.secondary : D.error }}>
+                    {open ? 'Open now' : 'Closed'}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Amenities card */}
+            <div className="flex items-start gap-3 p-5" style={{
+              background: D.surfaceLow, borderRadius: '1rem',
+            }}>
+              <IconCircle><Zap size={18} strokeWidth={1.8} /></IconCircle>
+              <div>
+                <p style={{
+                  fontFamily: "'Manrope', system-ui, sans-serif",
+                  fontSize: '10px', fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.14em', color: D.muted, marginBottom: 8,
+                }}>
+                  Amenities
+                </p>
+                <div className="flex gap-2.5">
+                  <Zap size={17} strokeWidth={1.8} style={{ color: D.text }} title="Power Outlets" />
+                  <Wifi size={17} strokeWidth={1.8} style={{ color: D.text }} title="WiFi" />
+                  {isCafe && <Coffee size={17} strokeWidth={1.8} style={{ color: D.text }} title="Coffee" />}
+                  {isWork && <Monitor size={17} strokeWidth={1.8} style={{ color: D.text }} title="Workstations" />}
+                  {!isCafe && !isWork && <BookOpen size={17} strokeWidth={1.8} style={{ color: D.text }} title="Study Space" />}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* About / Highlight */}
           {lib.highlight && (
-            <div className="flex items-start gap-3 px-4 py-3">
-              <Star size={14} className="mt-0.5 shrink-0" style={{ color: '#d4a843' }} />
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider mb-0.5"
-                   style={{ color: `${FD}60` }}>{t('highlights')}</p>
-                <p className="text-sm leading-snug" style={{ color: FD }}>{lib.highlight}</p>
-              </div>
-            </div>
+            <section style={{
+              background: D.surfaceTop, borderRadius: '1rem', padding: '1.5rem',
+              boxShadow: '0 4px 24px rgba(28,46,81,0.04)',
+            }}>
+              <h3 style={{
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                fontSize: '16px', fontWeight: 700, color: D.text, marginBottom: 10,
+              }}>
+                About the space
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: D.muted }}>{lib.highlight}</p>
+            </section>
           )}
+
+          {/* CTA — Report a Crowd Level */}
+          <div className="pt-2 pb-2">
+            {canReport ? (
+              <motion.button
+                onClick={() => setView('report')}
+                whileTap={{ scale: 0.97 }}
+                className="w-full flex items-center justify-center gap-3"
+                style={{
+                  background: `linear-gradient(135deg, ${D.primary} 0%, ${D.primaryCont} 100%)`,
+                  height: 64, borderRadius: '1rem',
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  fontSize: '16px', fontWeight: 700, color: '#edf3ff',
+                  boxShadow: '0 8px 24px rgba(0,93,164,0.28)',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                <Users size={20} strokeWidth={2} />
+                {t('reportBtnText')}
+              </motion.button>
+            ) : (
+              <div className="w-full flex items-center justify-center gap-2 cursor-not-allowed"
+                   style={{
+                     height: 64, borderRadius: '1rem',
+                     background: `rgba(0,93,164,0.06)`,
+                     fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                     fontSize: '14px', fontWeight: 600, color: `rgba(28,46,81,0.35)`,
+                   }}>
+                <Lock size={16} strokeWidth={2} />
+                {t('closedReport')}
+              </div>
+            )}
+          </div>
+
         </div>
-
-        {/* Barre d'occupation */}
-        <div className="mb-5">
-          <div className="flex justify-between items-baseline mb-1.5">
-            <span className="text-sm font-semibold" style={{ color: FD }}>{t('percentFull', lib.occupancy)}</span>
-            <span className="text-sm font-bold" style={{ color }}>{label}</span>
-          </div>
-          <div className="w-full rounded-full h-2 overflow-hidden" style={{ background: `${FD}12` }}>
-            <div className="h-2 rounded-full transition-all duration-500"
-                 style={{ width: `${lib.occupancy}%`, background: color }} />
-          </div>
-          <div className="flex justify-between text-xs mt-1" style={{ color: `${FD}40` }}>
-            <span>{t('empty')}</span><span>{t('full')}</span>
-          </div>
-        </div>
-
-        {/* Bouton signalement */}
-        {canReport ? (
-          <ReportButton onPress={() => setView('report')} />
-        ) : (
-          <div className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5
-                          text-sm font-medium cursor-not-allowed"
-               style={{ background: `${FD}08`, color: `${FD}50` }}>
-            <Lock size={14} strokeWidth={2} />
-            {t('closedReport')}
-          </div>
-        )}
-
       </div>
     </div>
   )
@@ -551,6 +670,7 @@ function AppInner() {
   const { t } = useLanguage()
   const [activeTab,   setActiveTab]   = useState('explore')
   const [selectedLib, setSelectedLib] = useState(null)
+  const [sheetFull,   setSheetFull]   = useState(false)
 
   const showBanner = isMock && import.meta.env.DEV
 
@@ -562,6 +682,7 @@ function AppInner() {
 
   function handleSelectLib(lib) {
     setSelectedLib(lib)
+    setSheetFull(false)
   }
 
   function handleTabChange(tab) {
@@ -603,7 +724,7 @@ function AppInner() {
         {activeTab === 'explore' && (
           <motion.div key="explore" className="absolute inset-0" variants={tabVariants}
                       initial="initial" animate="animate" exit="exit">
-            <ExploreTab libraries={libraries} onSelect={handleSelectLib} />
+            <ExploreTab libraries={libraries} onSelect={handleSelectLib} onNavigate={setActiveTab} />
           </motion.div>
         )}
         {activeTab === 'map' && (
@@ -636,42 +757,50 @@ function AppInner() {
         )}
       </AnimatePresence>
 
-      {/* ── Bottom sheet détail (overlay global) ─────────────────── */}
+      {/* ── Detail sheet — peek or full ───────────────────────────── */}
       <AnimatePresence>
         {selectedLib && (
-          <>
-            <motion.div
-              key="backdrop"
-              className="absolute inset-0 z-[1002]"
-              style={{ background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(2px)' }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setSelectedLib(null)}
+          <motion.div
+            key="detail-sheet"
+            className="absolute bottom-0 left-0 right-0 z-[1003]"
+            style={{
+              height: '100vh',
+              background: '#f5f6ff',
+              borderRadius: '2rem 2rem 0 0',
+              overflow: 'hidden',
+              boxShadow: '0 -8px 40px rgba(28,46,81,0.15)',
+            }}
+            initial={{ y: '100%' }}
+            animate={{ y: sheetFull ? '0%' : '38%' }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 34, stiffness: 320 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0.08, bottom: 0.15 }}
+            dragMomentum={false}
+            onDragEnd={(_, info) => {
+              const { offset, velocity } = info
+              if (offset.y < -60 || velocity.y < -400) {
+                // drag up → expand to full
+                setSheetFull(true)
+              } else if (offset.y > 80 || velocity.y > 400) {
+                if (sheetFull) {
+                  // drag down from full → back to peek
+                  setSheetFull(false)
+                } else {
+                  // drag down from peek → dismiss
+                  setSelectedLib(null)
+                }
+              }
+            }}
+          >
+            <LibrarySheet
+              lib={selectedLib}
+              onClose={() => setSelectedLib(null)}
+              onReport={handleReport}
+              isFullScreen={sheetFull}
             />
-            <motion.div
-              key="detail-sheet"
-              className="absolute bottom-0 left-0 right-0 z-[1003]
-                         rounded-t-[32px] shadow-2xl"
-              style={{ background: 'rgba(255,255,255,0.97)' }}
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-              drag="y"
-              dragConstraints={{ top: 0 }}
-              dragElastic={{ top: 0, bottom: 0.3 }}
-              onDragEnd={(_, info) => { if (info.offset.y > 100) setSelectedLib(null) }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <LibrarySheet
-                lib={selectedLib}
-                onClose={() => setSelectedLib(null)}
-                onReport={handleReport}
-              />
-            </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

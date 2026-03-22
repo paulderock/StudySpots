@@ -29,10 +29,17 @@ export function UserProvider({ children }) {
       return saved ? { ...DEFAULT_USER, ...JSON.parse(saved) } : DEFAULT_USER
     } catch { return DEFAULT_USER }
   })
+  const [rank, setRank] = useState(null)
 
   // Ref pour userId — accessible sans stale closure dans addScore
   const userIdRef = useRef(null)
   const channelRef = useRef(null)
+
+  async function fetchRank() {
+    if (!supabase) return
+    const { data, error } = await supabase.rpc('get_my_rank')
+    if (!error && data != null) setRank(data)
+  }
 
   useEffect(() => {
     if (!supabase) return
@@ -57,7 +64,10 @@ export function UserProvider({ children }) {
         }))
       }
 
-      // 2. Abonnement Realtime — score live sans rechargement
+      // 2. Charge le rank initial
+      fetchRank()
+
+      // 3. Abonnement Realtime — score live sans rechargement
       channelRef.current = supabase
         .channel(`profile:${uid}`)
         .on(
@@ -69,6 +79,8 @@ export function UserProvider({ children }) {
               score:   payload.new.score   ?? prev.score,
               reports: payload.new.reports ?? prev.reports,
             }))
+            // Re-fetch rank après chaque update de score
+            fetchRank()
           }
         )
         .subscribe()
@@ -127,7 +139,7 @@ export function UserProvider({ children }) {
   }
 
   return (
-    <UserContext.Provider value={{ user, addScore, resetUser, badge: getBadge(user.score) }}>
+    <UserContext.Provider value={{ user, rank, addScore, resetUser, badge: getBadge(user.score) }}>
       {children}
     </UserContext.Provider>
   )

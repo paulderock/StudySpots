@@ -1,129 +1,209 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { User, ChevronRight } from 'lucide-react'
+import { Zap, Wifi, Users } from 'lucide-react'
 import Map from '../Map'
 import { isLibOpen } from '../../utils/time'
 import { useLanguage } from '../../context/LanguageContext'
-import { CREME, MENTHE, EMER, VERRE, MOUSSE, MUTED, BORDER } from '../../palette'
 
-/* ── Constantes sheet ─────────────────────────────────────────── */
-// Les boutons flottants occupent ~80px depuis le bas (bottom-8 + 52px).
-// PEEK_H assure que le haut de la sheet (handle + titre) commence
-// juste au-dessus des boutons, laissant ~20px d'espace visuel.
-const SHEET_H = 560   // hauteur totale de la feuille
-const PEEK_H  = 160   // portion visible en mode "peek" (au-dessus des boutons)
-const PEEK_Y  = SHEET_H - PEEK_H  // 400 — translateY en mode fermé
+/* ── Palette tokens ───────────────────────────────────────────── */
+const C = {
+  bg:          '#f5f6ff',
+  surfaceTop:  '#ffffff',
+  surfaceLow:  '#edf0ff',
+  primary:     '#005da4',
+  primaryCont: '#4fa4ff',
+  secondary:   '#00694d',
+  secCont:     '#60fcc6',
+  tertiary:    '#6e5900',
+  tertCont:    '#fcd43e',
+  error:       '#b31b25',
+  text:        '#1c2e51',
+  muted:       '#4a5b80',
+  outline:     '#65779d',
+  outlineVar:  '#9badd7',
+}
 
-/* ── Jauge de 5 icônes User ────────────────────────────────────── */
-function OccupancyGauge({ occupancy }) {
-  let color, score
-  if      (occupancy >= 80) { color = '#c9433a'; score = 5 }
-  else if (occupancy >= 60) { color = '#e07c3a'; score = 4 }
-  else if (occupancy >= 40) { color = '#d4a843'; score = 3 }
-  else if (occupancy >= 20) { color = EMER;      score = 2 }
-  else                      { color = EMER;      score = 1 }
+const SHEET_H = 580
+const PEEK_H  = 200
+const PEEK_Y  = SHEET_H - PEEK_H
+
+/* ── Occupancy helpers ────────────────────────────────────────── */
+function getOccMeta(occ) {
+  if (occ >= 80) return { score: 5, color: C.error,    label: 'Full',     textColor: C.error }
+  if (occ >= 60) return { score: 4, color: '#c9433a',  label: 'Busy',     textColor: '#c9433a' }
+  if (occ >= 40) return { score: 3, color: C.tertiary, label: 'Buzzing',  textColor: C.tertiary }
+  if (occ >= 20) return { score: 2, color: C.secondary,label: 'Quiet',    textColor: C.secondary }
+  return               { score: 1, color: C.secondary, label: 'Very quiet',textColor: C.secondary }
+}
+
+/* ── Person pips SVG ──────────────────────────────────────────── */
+function PersonPips({ occupancy }) {
+  const { score, color } = getOccMeta(occupancy)
   return (
     <div className="flex items-center gap-0.5">
       {[1,2,3,4,5].map(i => (
-        <User key={i} size={12} strokeWidth={2.5}
-              style={{ color: i <= score ? color : BORDER }} />
+        <svg key={i} width="14" height="16" viewBox="0 0 14 16" fill="none">
+          <circle cx="7" cy="4" r="3"
+            fill={i <= score ? color : 'none'}
+            stroke={i <= score ? color : `${C.outlineVar}60`}
+            strokeWidth="1.2"/>
+          <path d="M1.5 15c0-3.038 2.462-5.5 5.5-5.5s5.5 2.462 5.5 5.5"
+            stroke={i <= score ? color : `${C.outlineVar}60`}
+            strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+        </svg>
       ))}
-      <span className="ml-1 text-[11px] font-semibold" style={{ color }}>{score}/5</span>
     </div>
   )
 }
 
-/* ── Carte Uber Eats style ────────────────────────────────────── */
-function typeIs(type, ...keywords) {
-  const t = (type ?? '').toLowerCase()
-  return keywords.some(k => t.includes(k))
-}
-
-function LibCard({ lib, onSelect, t }) {
-  const isCafe      = typeIs(lib.type, 'caf')
-  const isWorkspace = typeIs(lib.type, 'workspace', 'cowork')
-  const open   = isLibOpen(lib.openingTime, lib.closingTime)
+/* ── Spot card ────────────────────────────────────────────────── */
+function SpotCard({ lib, onSelect, t }) {
+  const open    = isLibOpen(lib.openingTime, lib.closingTime)
+  const occ     = lib.occupancy ?? 50
+  const { label, textColor } = getOccMeta(occ)
+  const isCafe  = (lib.type ?? '').toLowerCase().includes('caf')
+  const isWork  = (lib.type ?? '').toLowerCase().includes('workspace') || (lib.type ?? '').toLowerCase().includes('cowork')
+  const [hovered, setHovered] = useState(false)
 
   return (
-    <button
+    <article
       onClick={() => onSelect(lib)}
-      className="w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left"
-      style={{ borderBottom: `1px solid ${BORDER}` }}
-      onMouseEnter={e => e.currentTarget.style.background='rgba(79,160,149,0.04)'}
-      onMouseLeave={e => e.currentTarget.style.background='transparent'}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="cursor-pointer transition-all duration-200"
+      style={{
+        background: hovered ? '#ffffff' : '#ffffff',
+        borderRadius: '1rem',
+        padding: '1rem',
+        boxShadow: hovered ? '0 8px 24px rgba(0,93,164,0.08)' : 'none',
+      }}
     >
-      {/* Thumbnail */}
-      <div className="w-14 h-14 shrink-0 rounded-xl overflow-hidden relative">
-        {lib.imageUrl ? (
-          <img
-            src={lib.imageUrl} alt={lib.name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none'
-              e.currentTarget.nextSibling.style.display = 'flex'
-            }}
-          />
-        ) : null}
-        <div
-          className="absolute inset-0 items-center justify-center text-xl"
-          style={{
-            display: lib.imageUrl ? 'none' : 'flex',
-            background: isCafe      ? `linear-gradient(135deg,${CREME},#e8e89a)`
-                      : isWorkspace ? `linear-gradient(135deg,${MENTHE}35,${EMER}25)`
-                      :               `linear-gradient(135deg,${MOUSSE}15,${EMER}20)`,
-          }}
-        >
-          {isCafe ? '☕' : isWorkspace ? '💻' : '📚'}
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm leading-snug truncate" style={{ color: MOUSSE }}>{lib.name}</p>
-        {lib.address && (
-          <p className="text-[11px] truncate mt-0.5" style={{ color: MUTED }}>{lib.address}</p>
-        )}
-        <div className="flex items-center gap-2 mt-1.5">
-          <OccupancyGauge occupancy={lib.occupancy ?? 50} />
+      <div className="flex gap-3.5">
+        {/* Thumbnail */}
+        <div className="relative w-24 h-24 shrink-0 rounded-xl overflow-hidden">
+          {lib.imageUrl ? (
+            <img src={lib.imageUrl} alt={lib.name}
+                 className="w-full h-full object-cover transition-transform duration-500"
+                 style={{ transform: hovered ? 'scale(1.06)' : 'scale(1)' }}
+                 onError={e => {
+                   e.currentTarget.style.display = 'none'
+                   e.currentTarget.nextSibling.style.display = 'flex'
+                 }} />
+          ) : null}
+          {/* Placeholder */}
+          <div className="w-full h-full flex items-center justify-center text-2xl"
+               style={{
+                 display: lib.imageUrl ? 'none' : 'flex',
+                 background: isCafe
+                   ? `linear-gradient(135deg,#fff9ed,#ffefc4)`
+                   : isWork
+                   ? `linear-gradient(135deg,${C.surfaceLow},${C.primaryCont}35)`
+                   : `linear-gradient(135deg,${C.surfaceLow},${C.primary}12)`,
+               }}>
+            {isCafe ? '☕' : isWork ? '⌨️' : '📚'}
+          </div>
+          {/* Open/Closed badge */}
           {open !== null && (
-            <span className="flex items-center gap-0.5">
-              <span className="w-1.5 h-1.5 rounded-full shrink-0"
-                    style={{ background: open ? MENTHE : '#e07070' }} />
-              <span className="text-[11px] font-medium" style={{ color: MUTED }}>
-                {open ? t('open') : t('closed')}
-              </span>
-            </span>
+            <div className="absolute top-2 left-2"
+                 style={{
+                   background: open ? C.secondary : C.error,
+                   color: '#ffffff',
+                   fontSize: '9px', fontWeight: 700,
+                   fontFamily: "'Plus Jakarta Sans', sans-serif",
+                   padding: '2px 7px',
+                   borderRadius: '3px',
+                   letterSpacing: '0.10em',
+                   textTransform: 'uppercase',
+                 }}>
+              {open ? t('open') : t('closed')}
+            </div>
           )}
         </div>
-      </div>
 
-      <ChevronRight size={14} strokeWidth={2.5} className="shrink-0" style={{ color: MUTED }} />
+        {/* Info */}
+        <div className="flex flex-col justify-between flex-1 py-0.5 min-w-0">
+          <div>
+            <h3 className="font-bold leading-tight truncate"
+                style={{
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  fontSize: '16px', fontWeight: 700,
+                  color: C.text, letterSpacing: '-0.01em',
+                }}>
+              {lib.name}
+            </h3>
+            {lib.address && (
+              <p className="text-xs mt-0.5 truncate"
+                 style={{ color: C.muted, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                {lib.address}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center justify-between mt-2">
+            <PersonPips occupancy={occ} />
+            <span className="text-xs font-bold" style={{ color: textColor,
+              fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              {label}
+            </span>
+          </div>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+/* ── Filter chip ──────────────────────────────────────────────── */
+function FilterChip({ icon: Icon, label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex-none flex items-center gap-2 px-5 py-2.5 transition-all"
+      style={{
+        background: active ? C.primary : C.surfaceTop,
+        color: active ? '#ffffff' : C.text,
+        borderRadius: '9999px',
+        fontSize: '13px', fontWeight: 600,
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        border: `1px solid ${active ? C.primary : `rgba(155,173,215,0.25)`}`,
+        boxShadow: active ? `0 4px 12px rgba(0,93,164,0.25)` : '0 1px 4px rgba(28,46,81,0.06)',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <Icon size={15} strokeWidth={2} />
+      {label}
     </button>
   )
 }
 
-/* ── Composant principal ──────────────────────────────────────── */
+/* ── Main component ───────────────────────────────────────────── */
 export default function MapTab({ libraries, onSelect, showBanner }) {
   const { t } = useLanguage()
-  const [query,          setQuery]          = useState('')
-  const [isOpen,         setIsOpen]         = useState(false)
-  const [focusPoint,     setFocusPoint]     = useState(null)
-  const [selectedLibId,  setSelectedLibId]  = useState(null)
+  const [query,         setQuery]         = useState('')
+  const [isOpen,        setIsOpen]        = useState(false)
+  const [focusPoint,    setFocusPoint]    = useState(null)
+  const [selectedLibId, setSelectedLibId] = useState(null)
+  const [activeFilter,  setActiveFilter]  = useState(null)
 
-  const topOffset = showBanner ? 'top-10' : 'top-4'
+  const topOffset = showBanner ? 'top-12' : 'top-4'
 
-  /* Filtrage temps réel */
+  const filters = [
+    { id: 'quiet',  icon: Zap,   label: t('filterQuiet')   ?? 'Quiet'       },
+    { id: 'wifi',   icon: Wifi,  label: t('filterWifi')    ?? 'Wi-Fi'       },
+    { id: 'group',  icon: Users, label: t('filterGroup')   ?? 'Group Study' },
+  ]
+
   const filtered = useMemo(() => {
-    if (!query.trim()) return libraries
-    const q = query.toLowerCase()
-    return libraries.filter(lib =>
-      lib.name.toLowerCase().includes(q) ||
-      (lib.address ?? '').toLowerCase().includes(q) ||
-      (lib.type  ?? '').toLowerCase().includes(q)
-    )
+    let list = libraries
+    if (query.trim()) {
+      const q = query.toLowerCase()
+      list = list.filter(lib =>
+        lib.name.toLowerCase().includes(q) ||
+        (lib.address ?? '').toLowerCase().includes(q) ||
+        (lib.type    ?? '').toLowerCase().includes(q)
+      )
+    }
+    return list
   }, [libraries, query])
 
-  /* Clic sur une carte de la liste */
   function handleCardClick(lib) {
     setFocusPoint({ lat: lib.lat, lng: lib.lng, _t: Date.now() })
     setSelectedLibId(lib.id)
@@ -131,16 +211,16 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
     onSelect(lib)
   }
 
-  /* Clic direct sur un marqueur */
   function handleMarkerClick(lib) {
     setSelectedLibId(lib.id)
     onSelect(lib)
   }
 
+  const openCount = filtered.filter(l => isLibOpen(l.openingTime, l.closingTime)).length
+
   return (
     <div className="absolute inset-0">
-
-      {/* ── Carte plein écran ────────────────────────────────────── */}
+      {/* Full-screen map */}
       <Map
         libraries={filtered}
         onSelect={handleMarkerClick}
@@ -148,38 +228,39 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
         selectedLibId={selectedLibId}
       />
 
-      {/* ── Barre de recherche flottante ────────────────────────── */}
+      {/* ── Floating search bar ──────────────────────────────────── */}
       <div className={`absolute ${topOffset} left-4 right-4 z-[600]`}>
-        <div
-          className="flex items-center gap-2.5 rounded-2xl px-4 py-3 shadow-lg shadow-black/8"
-          style={{
-            background: 'rgba(255,255,255,0.92)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.6)',
-          }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-               stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" className="shrink-0">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="M21 21l-4.35-4.35"/>
+        <div className="flex items-center gap-3 px-5 py-3"
+             style={{
+               background: 'rgba(255,255,255,0.88)',
+               backdropFilter: 'blur(24px)',
+               WebkitBackdropFilter: 'blur(24px)',
+               border: `1px solid rgba(155,173,215,0.18)`,
+               borderRadius: '9999px',
+               boxShadow: '0 8px 32px rgba(0,93,164,0.10)',
+             }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" className="shrink-0">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
           <input
             type="text"
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setIsOpen(true) }}
-            placeholder={t('searchPlaceholder')}
-            className="flex-1 bg-transparent text-sm text-slate-800
-                       placeholder-slate-400 font-medium outline-none"
+            onChange={e => { setQuery(e.target.value); setIsOpen(true) }}
+            placeholder={t('searchPlaceholder') ?? 'Find your focus…'}
+            className="flex-1 bg-transparent outline-none font-semibold text-sm"
+            style={{
+              color: C.text,
+              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              letterSpacing: '-0.01em',
+            }}
           />
           {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="w-5 h-5 rounded-full bg-slate-200 flex items-center
-                         justify-center shrink-0"
-            >
+            <button onClick={() => setQuery('')}
+                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: C.surfaceLow }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                   stroke="#64748b" strokeWidth="3" strokeLinecap="round">
+                   stroke={C.outline} strokeWidth="3" strokeLinecap="round">
                 <path d="M18 6L6 18M6 6l12 12"/>
               </svg>
             </button>
@@ -187,14 +268,34 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
         </div>
       </div>
 
-      {/* ── Peek-a-boo bottom sheet ──────────────────────────────── */}
+      {/* ── Filter chips row ─────────────────────────────────────── */}
+      <div className={`absolute z-[600] left-0 right-0 flex gap-2 px-4 overflow-x-auto`}
+           style={{
+             top: showBanner ? '5.5rem' : '4.5rem',
+             scrollbarWidth: 'none',
+             msOverflowStyle: 'none',
+           }}>
+        {filters.map(f => (
+          <FilterChip
+            key={f.id}
+            icon={f.icon}
+            label={f.label}
+            active={activeFilter === f.id}
+            onClick={() => setActiveFilter(activeFilter === f.id ? null : f.id)}
+          />
+        ))}
+      </div>
+
+      {/* ── Bottom sheet ─────────────────────────────────────────── */}
       <motion.div
-        className="absolute left-0 right-0 bottom-0 rounded-t-[28px]"
+        className="absolute left-0 right-0 bottom-0"
         style={{
           height: SHEET_H,
-          background: '#fff',
-          boxShadow: '0 -1px 0 rgba(0,0,0,0.07)',
+          background: '#eef3fb',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.08)',
           zIndex: 500,
+          borderRadius: '3rem 3rem 0 0',
+          overflow: 'hidden',
         }}
         animate={{ y: isOpen ? 0 : PEEK_Y }}
         transition={{ type: 'spring', damping: 32, stiffness: 350 }}
@@ -207,68 +308,63 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
           else if (info.offset.y > 60 || info.velocity.y > 300) setIsOpen(false)
         }}
       >
-        {/* ── Handle bar ─────────────────────────────────────────── */}
-        <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing select-none">
-          <div className="w-9 h-1 rounded-full" style={{ background: `${VERRE}80` }} />
-        </div>
-
-        {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="px-4 pb-3 flex items-center justify-between">
-          <div>
-            <h3 className="font-black text-base tracking-tight leading-tight"
-                style={{ color: MOUSSE }}>
-              {query ? t('resultsFor', query) : t('spotsNearYou')}
-            </h3>
-            <p className="text-xs font-medium mt-0.5" style={{ color: EMER }}>
-              {t('availablePlaces', filtered.length)}
-            </p>
+        {/* Blue gradient header fading to white */}
+        <div style={{
+          background: `linear-gradient(180deg, #005da4 0%, #1a7fd4 35%, #4f9fd8 52%, #8ec3ee 65%, #c8e0f7 78%, #eef3fb 100%)`,
+          borderRadius: '3rem 3rem 0 0',
+          padding: '16px 24px 32px',
+        }}>
+          {/* Drag handle — white on blue */}
+          <div className="flex justify-center pb-3 cursor-grab active:cursor-grabbing select-none">
+            <div className="w-12 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.4)' }} />
           </div>
-          {!isOpen && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 select-none"
-                 style={{ background: `${EMER}15`, color: EMER }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M12 19V5M5 12l7-7 7 7"/>
-              </svg>
-              {t('swipeUp')}
+
+          {/* Header row */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 style={{
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                fontSize: '22px', fontWeight: 800,
+                letterSpacing: '-0.02em',
+                color: '#ffffff', lineHeight: 1.2,
+              }}>
+                {query ? t('resultsFor', query) : t('spotsNearYou')}
+              </h2>
+              <p style={{
+                fontFamily: "'Be Vietnam Pro', system-ui, sans-serif",
+                fontSize: '13px', fontWeight: 500,
+                color: 'rgba(255,255,255,0.75)', marginTop: 3,
+              }}>
+                {t('availablePlaces', filtered.length)}
+              </p>
             </div>
-          )}
-          {isOpen && (
-            <button onClick={() => setIsOpen(false)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ background: `${EMER}15`, color: EMER }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M18 6L6 18M6 6l12 12"/>
-              </svg>
-            </button>
-          )}
+
+          </div>
         </div>
 
-        {/* ── Séparateur ─────────────────────────────────────────── */}
-        <div className="h-px" style={{ background: `${VERRE}50` }} />
-
-        {/* ── Liste scrollable ────────────────────────────────────── */}
+        {/* Scrollable spot list */}
         <div
-          className="divide-y"
+          className="px-6"
           style={{
-            height: SHEET_H - 100,
+            height: SHEET_H - 120,
             overflowY: isOpen ? 'auto' : 'hidden',
+            scrollbarWidth: 'none',
           }}
-          onPointerDown={isOpen ? (e) => e.stopPropagation() : undefined}
+          onPointerDown={isOpen ? e => e.stopPropagation() : undefined}
         >
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center py-10 gap-2">
-              <p className="text-3xl">🔍</p>
-              <p className="text-sm font-semibold text-slate-500">{t('noResults')}</p>
-              <p className="text-xs text-slate-400">{t('tryOther')}</p>
+            <div className="flex flex-col items-center py-10 gap-3">
+              <span className="text-3xl">🔍</span>
+              <p className="text-sm font-semibold" style={{ color: C.muted }}>{t('noResults')}</p>
+              <p className="text-xs" style={{ color: C.outlineVar }}>{t('tryOther')}</p>
             </div>
           ) : (
-            filtered.map(lib => (
-              <LibCard key={lib.id} lib={lib} onSelect={handleCardClick} t={t} />
-            ))
+            <div className="flex flex-col gap-3">
+              {filtered.map(lib => (
+                <SpotCard key={lib.id} lib={lib} onSelect={handleCardClick} t={t} />
+              ))}
+            </div>
           )}
-          {/* Padding pour les boutons flottants (bottom-8 + 52px) */}
           <div className="h-36" />
         </div>
       </motion.div>

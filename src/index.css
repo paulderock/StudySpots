@@ -2,19 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Police Inter ─────────────────────────────────────────────── */
-* { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+/* ── Google Fonts — Lumina Academic System ────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600&family=Newsreader:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Manrope:wght@400;500;600;700&display=swap');
+
+/* ── Base typography ──────────────────────────────────────────── */
+* {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+}
+
+/* ── CSS Design Tokens ────────────────────────────────────────── */
+:root {
+  /* Light theme surfaces */
+  --surface:           #f5f6ff;
+  --surface-low:       #edf0ff;
+  --surface-mid:       #e0e8ff;
+  --surface-high:      #d8e2ff;
+  --surface-top:       #ffffff;
+
+  /* Primary (Deep Academic Blue) */
+  --primary:           #005da4;
+  --primary-container: #4fa4ff;
+  --primary-dim:       #3996f3;
+  --on-primary:        #edf3ff;
+
+  /* Secondary (Emerald) */
+  --secondary:         #00694d;
+  --secondary-container: #60fcc6;
+  --secondary-dim:     #4eeeb9;
+
+  /* Tertiary (Amber) */
+  --tertiary:          #6e5900;
+  --tertiary-container: #fcd43e;
+
+  /* Text */
+  --on-surface:        #1c2e51;
+  --on-surface-variant: #4a5b80;
+  --outline:           #65779d;
+  --outline-variant:   #9badd7;
+
+  /* Error */
+  --error:             #b31b25;
+  --error-container:   #fb5151;
+
+  /* Shadows */
+  --shadow-academic:   0 8px 32px rgba(28,46,81,0.06);
+  --shadow-float:      0 -8px 32px rgba(28,46,81,0.06);
+}
 
 /* ── Leaflet ──────────────────────────────────────────────────── */
 .leaflet-container { width: 100%; height: 100%; }
-
-/* Cache les contrôles zoom natifs Leaflet */
 .leaflet-control-zoom { display: none !important; }
 
 /* ── Glow points carte ────────────────────────────────────────── */
-.dot-glow-green  { filter: drop-shadow(0 0 7px #10b981cc); }
-.dot-glow-orange { filter: drop-shadow(0 0 7px #f59e0bcc); }
-.dot-glow-red    { filter: drop-shadow(0 0 7px #ef4444cc); }
+.dot-glow-green  { filter: drop-shadow(0 0 7px rgba(0,105,77,0.7)); }
+.dot-glow-orange { filter: drop-shadow(0 0 7px rgba(110,89,0,0.7)); }
+.dot-glow-red    { filter: drop-shadow(0 0 7px rgba(179,27,37,0.7)); }
 
 /* ── Anneau pulsant ───────────────────────────────────────────── */
 @keyframes pulse-ring {
@@ -84,16 +126,41 @@
   z-index: 9999;
 }
 
-/* ── Glassmorphism helpers ────────────────────────────────────── */
+/* ── Glassmorphism — academic light ───────────────────────────── */
 .glass {
-  background: rgba(255,255,255,0.72);
+  background: rgba(245,246,255,0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.25);
+  border: 1px solid rgba(155,173,215,0.25);
 }
+
+/* ── Glassmorphism — academic dark (login) ────────────────────── */
 .glass-dark {
-  background: rgba(15,15,20,0.55);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(11,29,45,0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(68,71,76,0.15);
+}
+
+/* ── Academic card shadow ─────────────────────────────────────── */
+.shadow-academic {
+  box-shadow: 0 8px 32px rgba(28,46,81,0.06);
+}
+
+/* ── No-line section rule (tonal separation only) ─────────────── */
+.section-divider {
+  background: linear-gradient(to bottom, var(--surface-low), var(--surface));
+}
+
+/* ── Occupancy bar ────────────────────────────────────────────── */
+.occ-track {
+  height: 4px;
+  background: var(--outline-variant);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.occ-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s ease;
 }

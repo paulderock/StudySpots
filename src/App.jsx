@@ -229,9 +229,9 @@ function ReportView({ lib, onConfirm, onBack }) {
         className="w-full font-semibold text-base rounded-2xl py-4
                    flex items-center justify-center gap-2 transition-all duration-200"
         style={rating && !submitting ? {
-          background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
-          color: 'white',
-          boxShadow: '0 8px 30px rgba(59,130,246,0.30), 0 2px 8px rgba(59,130,246,0.20)',
+          background: 'linear-gradient(135deg, #4FA095 0%, #153462 100%)',
+          color: '#F6F6C9',
+          boxShadow: '0 8px 30px rgba(79,160,149,0.35), 0 2px 8px rgba(21,52,98,0.20)',
         } : {
           background: 'rgba(241,245,249,0.9)',
           color: '#94a3b8',
@@ -256,17 +256,18 @@ function SuccessView({ onClose }) {
   const { t } = useLanguage()
   return (
     <div className="px-5 pt-6 pb-10 flex flex-col items-center text-center">
-      <div className="check-pop w-20 h-20 rounded-full bg-emerald-50 flex items-center
-                      justify-center mb-5 border-2 border-emerald-200">
+      <div className="check-pop w-20 h-20 rounded-full flex items-center
+                      justify-center mb-5"
+           style={{ background: 'rgba(138,209,194,0.12)', border: '2px solid rgba(138,209,194,0.35)' }}>
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
           <path className="draw-check" d="M8 21 L17 30 L33 12"
-                stroke="#10b981" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+                stroke="#8AD1C2" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
       <h2 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">{t('successTitle')}</h2>
       <p className="text-sm text-slate-500 mb-1">{t('successBody')}</p>
       <p className="text-xs text-slate-400 mb-2">{t('successRT')}</p>
-      <p className="text-xs font-bold text-indigo-500 mb-8">{t('successPts')}</p>
+      <p className="text-xs font-bold mb-8" style={{ color: '#4FA095' }}>{t('successPts')}</p>
       <button onClick={onClose}
         className="px-8 py-3 rounded-2xl bg-slate-900 text-white
                    font-semibold text-sm hover:bg-slate-700 transition-colors">
@@ -299,9 +300,9 @@ function ReportButton({ onPress }) {
         className="btn-shimmer w-full flex items-center justify-center gap-3
                    text-white rounded-xl py-4 px-6"
         style={{
-          background: '#0a0f1e',
-          border: '1px solid rgba(255,255,255,0.10)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.20), 0 4px 8px rgba(0,0,0,0.15)',
+          background: '#153462',
+          border: '1px solid rgba(138,209,194,0.20)',
+          boxShadow: '0 20px 40px rgba(21,52,98,0.30), 0 4px 8px rgba(0,0,0,0.15)',
           fontSize: '0.875rem',
           fontWeight: 500,
           letterSpacing: '0.04em',

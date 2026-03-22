@@ -10,10 +10,10 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 
 /* ── Palette ──────────────────────────────────────────────────── */
-const MINT         = '#8AD1C2'
-const FOREST_LIGHT = '#4FA095'
-const FOREST_DEEP  = '#153462'
-const CREAM        = '#F6F6C9'
+const MINT         = '#6BA89A'   // sauge mat
+const FOREST_LIGHT = '#4A8C82'   // vert désaturé
+const FOREST_DEEP  = '#1C3A2E'  // vert profond mat
+const CREAM        = '#F0EFD8'   // crème chaud
 
 /* ── Barre de progression ─────────────────────────────────────── */
 function ProgressBar({ score, badge }) {
@@ -118,8 +118,8 @@ export default function ProfileTab() {
   }
 
   return (
-    <div className="absolute inset-0 overflow-y-auto pb-36"
-         style={{ background: '#f2f6f5', scrollbarWidth: 'none' }}>
+    <div className="absolute inset-0 overflow-y-auto pb-28"
+         style={{ background: '#F5F5F0', scrollbarWidth: 'none' }}>
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <div className="pt-14 pb-5 px-5 mb-3"

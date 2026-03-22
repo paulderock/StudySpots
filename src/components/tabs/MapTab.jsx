@@ -46,8 +46,10 @@ function LibCard({ lib, onSelect, t }) {
   return (
     <button
       onClick={() => onSelect(lib)}
-      className="w-full flex items-center gap-3 px-4 py-3.5
-                 hover:bg-slate-50/80 active:bg-slate-100/80 transition-colors text-left"
+      className="w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left"
+      style={{ borderBottom: '1px solid rgba(79,160,149,0.08)' }}
+      onMouseEnter={e => e.currentTarget.style.background='rgba(79,160,149,0.04)'}
+      onMouseLeave={e => e.currentTarget.style.background='transparent'}
     >
       {/* Thumbnail */}
       <div className="w-14 h-14 shrink-0 rounded-xl overflow-hidden relative">
@@ -76,9 +78,9 @@ function LibCard({ lib, onSelect, t }) {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-slate-800 text-base leading-snug truncate">{lib.name}</p>
+        <p className="font-bold text-sm leading-snug truncate" style={{ color: '#153462' }}>{lib.name}</p>
         {lib.address && (
-          <p className="text-xs text-slate-400 truncate mt-0.5">{lib.address}</p>
+          <p className="text-[11px] truncate mt-0.5" style={{ color: '#94a3b8' }}>{lib.address}</p>
         )}
         <div className="flex items-center gap-2 mt-1.5">
           <OccupancyGauge occupancy={lib.occupancy ?? 50} />
@@ -94,7 +96,7 @@ function LibCard({ lib, onSelect, t }) {
         </div>
       </div>
 
-      <ChevronRight size={14} strokeWidth={2} className="shrink-0 text-slate-300" />
+      <ChevronRight size={14} strokeWidth={2.5} className="shrink-0" style={{ color: 'rgba(79,160,149,0.45)' }} />
     </button>
   )
 }
@@ -186,12 +188,11 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
 
       {/* ── Peek-a-boo bottom sheet ──────────────────────────────── */}
       <motion.div
-        className="absolute left-0 right-0 bottom-0 rounded-t-[28px] shadow-2xl shadow-black/15"
+        className="absolute left-0 right-0 bottom-0 rounded-t-[28px]"
         style={{
           height: SHEET_H,
-          background: 'rgba(255,255,255,0.97)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          background: '#fff',
+          boxShadow: '0 -1px 0 rgba(0,0,0,0.07)',
           zIndex: 500,
         }}
         animate={{ y: isOpen ? 0 : PEEK_Y }}
@@ -207,23 +208,23 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
       >
         {/* ── Handle bar ─────────────────────────────────────────── */}
         <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing select-none">
-          <div className="w-8 h-1 rounded-full bg-slate-200" />
+          <div className="w-9 h-1 rounded-full" style={{ background: 'rgba(79,160,149,0.30)' }} />
         </div>
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="px-4 pb-3 flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-slate-900 text-base tracking-tight leading-tight">
+            <h3 className="font-black text-base tracking-tight leading-tight"
+                style={{ color: '#153462' }}>
               {query ? t('resultsFor', query) : t('spotsNearYou')}
             </h3>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">
+            <p className="text-xs font-medium mt-0.5" style={{ color: '#4FA095' }}>
               {t('availablePlaces', filtered.length)}
             </p>
           </div>
-          {/* Indicateur swipe-up quand fermé */}
           {!isOpen && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium
-                            bg-slate-50 rounded-full px-3 py-1.5 select-none">
+            <div className="flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 select-none"
+                 style={{ background: 'rgba(79,160,149,0.10)', color: '#4FA095' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M12 19V5M5 12l7-7 7 7"/>
@@ -232,11 +233,9 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
             </div>
           )}
           {isOpen && (
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-8 h-8 rounded-full bg-slate-100 flex items-center
-                         justify-center text-slate-500"
-            >
+            <button onClick={() => setIsOpen(false)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(79,160,149,0.12)', color: '#4FA095' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M18 6L6 18M6 6l12 12"/>
@@ -246,11 +245,11 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
         </div>
 
         {/* ── Séparateur ─────────────────────────────────────────── */}
-        <div className="h-px bg-slate-100" />
+        <div className="h-px" style={{ background: 'rgba(79,160,149,0.12)' }} />
 
         {/* ── Liste scrollable ────────────────────────────────────── */}
         <div
-          className="divide-y divide-slate-50"
+          className="divide-y"
           style={{
             height: SHEET_H - 100,
             overflowY: isOpen ? 'auto' : 'hidden',

@@ -67,9 +67,9 @@ function LibCard({ lib, onSelect, t }) {
           className="absolute inset-0 items-center justify-center text-xl"
           style={{
             display: lib.imageUrl ? 'none' : 'flex',
-            background: isCafe      ? 'linear-gradient(135deg,#fef3c7,#fde68a)'
-                      : isWorkspace ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)'
-                      :               'linear-gradient(135deg,#eff6ff,#dbeafe)',
+            background: isCafe      ? 'linear-gradient(135deg,#F0EFD8,#e4e396)'
+                      : isWorkspace ? 'linear-gradient(135deg,#6BA89A25,#4A8C8220)'
+                      :               'linear-gradient(135deg,#1C3A2E12,#4A8C8218)',
           }}
         >
           {isCafe ? '☕' : isWorkspace ? '💻' : '📚'}

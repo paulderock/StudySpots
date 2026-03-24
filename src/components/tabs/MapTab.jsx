@@ -80,41 +80,56 @@ function SpotCard({ lib, onSelect, t }) {
     >
       <div className="flex gap-3.5">
         {/* Thumbnail */}
-        <div className="relative w-24 h-24 shrink-0 rounded-xl overflow-hidden">
-          {lib.imageUrl ? (
-            <img src={lib.imageUrl} alt={lib.name}
-                 className="w-full h-full object-cover transition-transform duration-500"
-                 style={{ transform: hovered ? 'scale(1.06)' : 'scale(1)' }}
-                 onError={e => {
-                   e.currentTarget.style.display = 'none'
-                   e.currentTarget.nextSibling.style.display = 'flex'
-                 }} />
-          ) : null}
-          {/* Placeholder */}
-          <div className="w-full h-full flex items-center justify-center text-2xl"
-               style={{
-                 display: lib.imageUrl ? 'none' : 'flex',
-                 background: isCafe
-                   ? `linear-gradient(135deg,#fff9ed,#ffefc4)`
-                   : isWork
-                   ? `linear-gradient(135deg,${C.surfaceLow},${C.primaryCont}35)`
-                   : `linear-gradient(135deg,${C.surfaceLow},${C.primary}12)`,
-               }}>
-            {isCafe ? '☕' : isWork ? '⌨️' : '📚'}
+        <div className="relative shrink-0" style={{ width: 96, height: 96 }}>
+          <div style={{
+            width: 96, height: 96,
+            borderRadius: 12,
+            overflow: 'hidden',
+            position: 'relative',
+          }}>
+            {lib.imageUrl ? (
+              <img src={lib.imageUrl} alt={lib.name}
+                   style={{
+                     width: '100%', height: '100%',
+                     objectFit: 'cover',
+                     display: 'block',
+                     transform: hovered ? 'scale(1.06)' : 'scale(1)',
+                     transition: 'transform 0.5s ease',
+                   }}
+                   onError={e => {
+                     e.currentTarget.style.display = 'none'
+                     e.currentTarget.nextSibling.style.display = 'flex'
+                   }} />
+            ) : null}
+            {/* Placeholder */}
+            <div style={{
+              width: '100%', height: '100%',
+              display: lib.imageUrl ? 'none' : 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              fontSize: 24,
+              background: isCafe
+                ? `linear-gradient(135deg,#fff9ed,#ffefc4)`
+                : isWork
+                ? `linear-gradient(135deg,${C.surfaceLow},${C.primaryCont}35)`
+                : `linear-gradient(135deg,${C.surfaceLow},${C.primary}12)`,
+            }}>
+              {isCafe ? '☕' : isWork ? '⌨️' : '📚'}
+            </div>
           </div>
-          {/* Open/Closed badge */}
+          {/* Open/Closed badge — outside overflow clip so it's never cut off */}
           {open !== null && (
-            <div className="absolute top-2 left-2"
-                 style={{
-                   background: open ? C.secondary : C.error,
-                   color: '#ffffff',
-                   fontSize: '9px', fontWeight: 700,
-                   fontFamily: "'Plus Jakarta Sans', sans-serif",
-                   padding: '2px 7px',
-                   borderRadius: '3px',
-                   letterSpacing: '0.10em',
-                   textTransform: 'uppercase',
-                 }}>
+            <div style={{
+              position: 'absolute', top: 6, left: 6,
+              background: open ? C.secondary : C.error,
+              color: '#ffffff',
+              fontSize: '9px', fontWeight: 700,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              padding: '2px 7px',
+              borderRadius: 3,
+              letterSpacing: '0.10em',
+              textTransform: 'uppercase',
+              zIndex: 2,
+            }}>
               {open ? t('open') : t('closed')}
             </div>
           )}

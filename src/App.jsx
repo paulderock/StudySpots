@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import SplashScreen from './components/SplashScreen'
 import { UserRound, Users, UsersRound, Users2, MapPin, Clock, Star, BookOpen, Coffee, Zap, Lock, Monitor, Wifi, CheckCircle2, ArrowLeft, X } from 'lucide-react'
 import { isLibOpen, formatHours } from './utils/time'
 import BottomNav from './components/BottomNav'
@@ -644,16 +645,25 @@ function AuthGate({ children }) {
 
 /* ─── App root ───────────────────────────────────────────────────── */
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false)
+
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <UserProvider>
-          <AuthGate>
-            <AppInner />
-          </AuthGate>
-        </UserProvider>
-      </AuthProvider>
-    </LanguageProvider>
+    <>
+      <AnimatePresence>
+        {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
+      </AnimatePresence>
+      {splashDone && (
+        <LanguageProvider>
+          <AuthProvider>
+            <UserProvider>
+              <AuthGate>
+                <AppInner />
+              </AuthGate>
+            </UserProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      )}
+    </>
   )
 }
 

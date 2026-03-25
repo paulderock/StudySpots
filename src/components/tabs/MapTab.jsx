@@ -283,23 +283,7 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
         </div>
       </div>
 
-      {/* ── Filter chips row ─────────────────────────────────────── */}
-      <div className={`absolute z-[600] left-0 right-0 flex gap-2 px-4 overflow-x-auto`}
-           style={{
-             top: showBanner ? '5.5rem' : '4.5rem',
-             scrollbarWidth: 'none',
-             msOverflowStyle: 'none',
-           }}>
-        {filters.map(f => (
-          <FilterChip
-            key={f.id}
-            icon={f.icon}
-            label={f.label}
-            active={activeFilter === f.id}
-            onClick={() => setActiveFilter(activeFilter === f.id ? null : f.id)}
-          />
-        ))}
-      </div>
+      {/* Filter chips — hidden for now */}
 
       {/* ── Bottom sheet ─────────────────────────────────────────── */}
       <motion.div

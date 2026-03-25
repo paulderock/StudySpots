@@ -63,7 +63,8 @@ export default function BottomNav({ active, onChange }) {
         paddingRight: 24,
         paddingTop: 10,
         display: 'flex',
-        justifyContent: 'space-around',
+        justifyContent: 'center',
+        gap: 28,
         alignItems: 'flex-end',
         pointerEvents: 'none',
       }}
@@ -91,8 +92,8 @@ export default function BottomNav({ active, onChange }) {
             {/* Floating circle */}
             <motion.div
               animate={{
-                width:  isActive ? 64 : 52,
-                height: isActive ? 64 : 52,
+                width:  isActive ? 58 : 52,
+                height: isActive ? 58 : 52,
                 boxShadow: isActive
                   ? '0 8px 24px rgba(0,93,164,0.18)'
                   : '0 4px 14px rgba(28,46,81,0.10)',

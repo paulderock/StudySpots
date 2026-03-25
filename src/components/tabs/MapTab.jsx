@@ -306,7 +306,7 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
         className="absolute left-0 right-0 bottom-0"
         style={{
           height: SHEET_H,
-          background: '#eef3fb',
+          background: '#ffffff',
           boxShadow: '0 -8px 40px rgba(0,0,0,0.08)',
           zIndex: 500,
           borderRadius: '3rem 3rem 0 0',
@@ -323,15 +323,15 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
           else if (info.offset.y > 60 || info.velocity.y > 300) setIsOpen(false)
         }}
       >
-        {/* Blue gradient header fading to white */}
+        {/* Sheet header — white, clean */}
         <div style={{
-          background: `linear-gradient(180deg, #005da4 0%, #1a7fd4 35%, #4f9fd8 52%, #8ec3ee 65%, #c8e0f7 78%, #eef3fb 100%)`,
+          background: '#ffffff',
           borderRadius: '3rem 3rem 0 0',
-          padding: '16px 24px 32px',
+          padding: '14px 24px 20px',
         }}>
-          {/* Drag handle — white on blue */}
-          <div className="flex justify-center pb-3 cursor-grab active:cursor-grabbing select-none">
-            <div className="w-12 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.4)' }} />
+          {/* Drag handle — gray */}
+          <div className="flex justify-center pb-4 cursor-grab active:cursor-grabbing select-none">
+            <div style={{ width: 40, height: 5, borderRadius: 9999, background: '#d1d8e8' }} />
           </div>
 
           {/* Header row */}
@@ -341,19 +341,23 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
                 fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                 fontSize: '22px', fontWeight: 800,
                 letterSpacing: '-0.02em',
-                color: '#ffffff', lineHeight: 1.2,
+                color: '#1c2e51', lineHeight: 1.2,
               }}>
                 {query ? t('resultsFor', query) : t('spotsNearYou')}
               </h2>
               <p style={{
                 fontFamily: "'Be Vietnam Pro', system-ui, sans-serif",
                 fontSize: '13px', fontWeight: 500,
-                color: 'rgba(255,255,255,0.75)', marginTop: 3,
+                color: '#005da4', marginTop: 4,
+                display: 'flex', alignItems: 'center', gap: 5,
               }}>
+                <span style={{
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: '#005da4', display: 'inline-block', flexShrink: 0,
+                }} />
                 {t('availablePlaces', filtered.length)}
               </p>
             </div>
-
           </div>
         </div>
 

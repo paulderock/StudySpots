@@ -266,13 +266,22 @@ export default function ExploreTab({ libraries, onSelect, onNavigate }) {
 
       {/* ══ Header bar ══════════════════════════════════════════════ */}
       <div className="flex items-center justify-between px-5 pt-12 pb-3">
-        <h1 style={{
-          fontFamily: "'Newsreader', Georgia, serif",
-          fontSize: '28px', fontWeight: 300, fontStyle: 'italic',
-          letterSpacing: '-0.03em', color: C.primary,
-        }}>
-          Seatr
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{
+            width: 10, height: 10,
+            borderRadius: '50%',
+            background: '#60fcc6',
+            boxShadow: '0 0 12px rgba(108,248,187,0.7)',
+            flexShrink: 0,
+          }} />
+          <span style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 26, fontWeight: 800,
+            letterSpacing: '-0.04em',
+            color: C.text,
+            lineHeight: 1,
+          }}>Seatr</span>
+        </div>
         <button className="w-9 h-9 rounded-full flex items-center justify-center"
                 style={{ background: C.surfaceLow }}>
           <Search size={16} strokeWidth={2} style={{ color: C.primary }} />

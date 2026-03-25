@@ -99,8 +99,10 @@ function getLevelInfo(score) {
 function ScoreProgressBar({ score }) {
   const { current, next, pct } = getLevelInfo(score)
   return (
-    <div className="mx-6 mb-5 px-5 py-4 rounded-2xl"
-         style={{
+    <div style={{
+           margin: '0 24px 20px',
+           padding: '16px 20px',
+           borderRadius: 16,
            background: C.surfaceTop,
            border: `1px solid rgba(155,173,215,0.12)`,
            boxShadow: '0 4px 24px rgba(28,46,81,0.07)',

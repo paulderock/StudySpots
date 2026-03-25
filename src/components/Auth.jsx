@@ -1,95 +1,68 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Lock, User, Phone, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 
-/* ── Dark academic palette (login screen only) ────────────────── */
-const D = {
-  bg:       '#031425',
-  surface:  '#0f2131',
-  high:     '#1a2b3c',
-  top:      '#253648',
-  primary:  '#b7c8de',
-  text:     '#d2e4fb',
-  muted:    '#c4c6cd',
-  outline:  '#8e9197',
-  outVar:   '#44474c',
-  onPrimary: '#213243',
+/* ── Premium Refined palette (from Stitch "Login Premium Refined") ── */
+const C = {
+  primary:       '#004ac6',
+  primaryCont:   '#2563eb',
+  surface:       '#faf9f6',
+  surfaceLow:    '#f4f3f1',
+  surfaceHigh:   '#e9e8e5',
+  surfaceLowest: '#ffffff',
+  onSurface:     '#1a1c1a',
+  onSurfaceVar:  '#434655',
+  outlineVar:    '#c3c6d7',
+  secondary:     '#006c49',
+  secondaryCont: '#6cf8bb',
 }
 
-/* ── Input field ──────────────────────────────────────────────── */
-function Field({ icon: Icon, type = 'text', placeholder, value, onChange, autoComplete }) {
+/* ── Pill input field ─────────────────────────────────────────────── */
+function Field({ iconName, type = 'text', placeholder, value, onChange, autoComplete, rightSlot }) {
   return (
     <div className="relative">
-      <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-            style={{ color: D.muted }}>
-        <Icon size={15} strokeWidth={1.6} />
-      </span>
+      {/* Left icon */}
+      <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+        <span className="material-symbols-outlined"
+              style={{ fontSize: 20, color: C.onSurfaceVar, fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>
+          {iconName}
+        </span>
+      </div>
       <input
         type={type}
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
         autoComplete={autoComplete}
-        className="w-full pl-10 pr-4 py-3 text-sm outline-none transition-all"
+        className="w-full outline-none transition-all"
         style={{
-          background: `rgba(37,54,72,0.40)`,
-          border: `1px solid rgba(68,71,76,0.30)`,
-          borderRadius: '0.375rem',
-          color: D.text,
-          fontFamily: "'Manrope', system-ui, sans-serif",
-          letterSpacing: '0.01em',
+          paddingLeft: 56, paddingRight: rightSlot ? 56 : 24,
+          paddingTop: 16, paddingBottom: 16,
+          background: C.surfaceLow,
+          border: 'none',
+          borderRadius: 9999,
+          color: C.onSurface,
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontSize: 15,
         }}
-        onFocus={e => {
-          e.target.style.border = `1px solid rgba(183,200,222,0.45)`
-          e.target.style.background = `rgba(37,54,72,0.65)`
-        }}
-        onBlur={e => {
-          e.target.style.border = `1px solid rgba(68,71,76,0.30)`
-          e.target.style.background = `rgba(37,54,72,0.40)`
-        }}
+        onFocus={e => { e.target.style.outline = 'none'; e.target.style.boxShadow = `0 0 0 2px rgba(0,74,198,0.25)` }}
+        onBlur={e => { e.target.style.boxShadow = 'none' }}
       />
-      <style>{`input::placeholder { color: rgba(196,198,205,0.45); font-size: 13px; }`}</style>
+      {rightSlot && (
+        <div className="absolute inset-y-0 right-6 flex items-center">
+          {rightSlot}
+        </div>
+      )}
     </div>
   )
 }
 
-/* ── Logo ─────────────────────────────────────────────────────── */
-function Logo({ t }) {
-  return (
-    <div className="text-center mb-7">
-      {/* Wordmark — Newsreader serif italic */}
-      <h1 style={{
-        fontFamily: "'Newsreader', 'Georgia', serif",
-        fontSize: '38px',
-        fontWeight: 300,
-        fontStyle: 'italic',
-        letterSpacing: '-0.03em',
-        color: D.primary,
-        lineHeight: 1,
-        marginBottom: '8px',
-      }}>
-        Seatr
-      </h1>
-      <p style={{
-        fontFamily: "'Manrope', system-ui, sans-serif",
-        fontSize: '10px',
-        letterSpacing: '0.30em',
-        textTransform: 'uppercase',
-        color: `rgba(196,198,205,0.50)`,
-        fontWeight: 500,
-      }}>
-        {t('tagline')}
-      </p>
-    </div>
-  )
-}
-
-/* ── Google icon ─────────────────────────────────────────────── */
+/* ── Google icon ──────────────────────────────────────────────────── */
 function GoogleIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
@@ -98,7 +71,7 @@ function GoogleIcon() {
   )
 }
 
-/* ── Main component ───────────────────────────────────────────── */
+/* ── Main component ───────────────────────────────────────────────── */
 export default function Auth() {
   const { signIn, signUp, signInWithGoogle, error, setError } = useAuth()
   const { t } = useLanguage()
@@ -107,6 +80,7 @@ export default function Auth() {
   const [loading,       setLoading]       = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [done,          setDone]          = useState(false)
+  const [showPass,      setShowPass]      = useState(false)
 
   const [email,     setEmail]     = useState('')
   const [password,  setPassword]  = useState('')
@@ -134,170 +108,260 @@ export default function Auth() {
   }
 
   return (
-    <div className="fixed inset-0" style={{ fontFamily: "'Manrope', system-ui, sans-serif", zIndex: 9999 }}>
+    <div className="fixed inset-0" style={{ zIndex: 9999, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Google Material Symbols */}
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" />
 
-      {/* Background — deep midnight + library photo */}
-      <div className="absolute inset-0 bg-cover bg-center"
-           style={{ backgroundImage: "url('/bg-library.jpg')", filter: 'brightness(0.55)' }} />
-      <div className="absolute inset-0"
-           style={{ background: 'rgba(3,20,37,0.72)' }} />
+      {/* Background — library photo */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-cover bg-center"
+             style={{ backgroundImage: "url('/bg-library.jpg')", filter: 'brightness(0.75)', transform: 'scale(1.05)' }} />
+        <div className="absolute inset-0" style={{ background: `rgba(0,74,198,0.08)`, mixBlendMode: 'multiply' }} />
+      </div>
 
-      {/* Centered card */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
+      {/* Ambient blobs */}
+      <div className="absolute top-0 right-0 pointer-events-none"
+           style={{ width: 400, height: 400, background: `${C.secondaryCont}0d`, filter: 'blur(100px)', borderRadius: '50%' }} />
+      <div className="absolute bottom-0 left-0 pointer-events-none"
+           style={{ width: 400, height: 400, background: `${C.primary}0d`, filter: 'blur(100px)', borderRadius: '50%' }} />
+
+      {/* Centered layout */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-6 py-8">
         <motion.div
-          className="w-full max-w-xs"
-          style={{
-            background: 'rgba(11,29,45,0.78)',
-            backdropFilter: 'blur(28px)',
-            WebkitBackdropFilter: 'blur(28px)',
-            borderRadius: '0.375rem',
-            border: `1px solid rgba(68,71,76,0.20)`,
-            borderTop: `1px solid rgba(183,200,222,0.15)`,
-            boxShadow: `0 32px 64px rgba(0,15,31,0.50), 0 0 0 0.5px rgba(183,200,222,0.06)`,
-            padding: '2rem 1.75rem',
-          }}
-          initial={{ opacity: 0, y: 52 }}
+          className="w-full"
+          style={{ maxWidth: 440 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', damping: 24, stiffness: 180, delay: 0.05 }}
+          transition={{ type: 'spring', damping: 26, stiffness: 200, delay: 0.04 }}
         >
-          <Logo t={t} />
+          {/* Card — glass panel with very rounded corners */}
+          <div style={{
+            background: 'rgba(255,255,255,0.88)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            borderRadius: 40,
+            padding: 8,
+            boxShadow: '0 24px 64px rgba(0,74,198,0.15), 0 2px 0 rgba(255,255,255,0.6) inset',
+          }}>
+            <div style={{ padding: '48px 40px' }}>
 
-          {/* Tabs — Newsreader serif style */}
-          <div className="flex gap-8 justify-center mb-6">
-            {['login', 'signup'].map(m => (
-              <button
-                key={m}
-                onClick={() => switchMode(m)}
-                className="pb-1.5 transition-all duration-150"
-                style={{
-                  fontFamily: "'Newsreader', Georgia, serif",
-                  fontSize: '20px',
-                  fontWeight: mode === m ? 400 : 300,
-                  fontStyle: 'italic',
-                  color: mode === m ? D.primary : `rgba(196,198,205,0.35)`,
-                  borderBottom: mode === m ? `1.5px solid ${D.primary}` : '1.5px solid transparent',
-                  letterSpacing: '-0.01em',
-                }}
-              >
-                {m === 'login' ? t('loginTab') : t('signupTab')}
-              </button>
-            ))}
+              {/* Brand identity */}
+              <div className="text-center" style={{ marginBottom: 36 }}>
+                <div className="flex items-center justify-center gap-2" style={{ marginBottom: 6 }}>
+                  <span style={{
+                    width: 10, height: 10,
+                    borderRadius: '50%',
+                    background: C.secondaryCont,
+                    boxShadow: '0 0 12px rgba(108,248,187,0.7)',
+                    flexShrink: 0,
+                  }} />
+                  <span style={{
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontSize: 28,
+                    fontWeight: 800,
+                    letterSpacing: '-0.04em',
+                    color: C.onSurface,
+                    lineHeight: 1,
+                  }}>Seatr</span>
+                </div>
+                <p style={{
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 10,
+                  fontWeight: 500,
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: C.onSurfaceVar,
+                }}>
+                  Amsterdam Study Spots
+                </p>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-8 justify-center" style={{ marginBottom: 36 }}>
+                {(['login', 'signup']).map(m => (
+                  <button
+                    key={m}
+                    onClick={() => switchMode(m)}
+                    style={{
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      fontSize: 16,
+                      fontWeight: mode === m ? 700 : 500,
+                      color: mode === m ? C.primary : C.onSurfaceVar,
+                      borderBottom: mode === m ? `2px solid ${C.primary}` : '2px solid transparent',
+                      paddingBottom: 4,
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: mode === m ? `2px solid ${C.primary}` : '2px solid transparent',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                    }}
+                  >
+                    {m === 'login' ? t('loginTab') : t('signupTab')}
+                  </button>
+                ))}
+              </div>
+
+              {/* Form area */}
+              <AnimatePresence mode="wait">
+                {done ? (
+                  <motion.div
+                    key="done"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center py-6"
+                  >
+                    <CheckCircle2 size={44} className="mx-auto mb-3" strokeWidth={1.5}
+                                  style={{ color: C.secondary }} />
+                    <p style={{ fontWeight: 600, fontSize: 15, color: C.onSurface }}>{t('checkEmail')}</p>
+                    <p style={{ fontSize: 13, marginTop: 6, color: C.onSurfaceVar, lineHeight: 1.5 }}>
+                      {t('confirmSent')}<br />
+                      <span style={{ fontWeight: 600, color: C.onSurface }}>{email}</span>
+                    </p>
+                    <button
+                      onClick={() => { setDone(false); switchMode('login') }}
+                      style={{ marginTop: 20, fontSize: 13, fontWeight: 600, color: C.primary, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      {t('backToLogin')}
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.form
+                    key={mode}
+                    initial={{ opacity: 0, x: mode === 'login' ? -12 : 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    onSubmit={handleSubmit}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+                  >
+                    {mode === 'signup' && (
+                      <>
+                        <Field iconName="person" placeholder={t('firstNamePh')} value={firstName} onChange={setFirstName} autoComplete="given-name" />
+                        <Field iconName="phone" type="tel" placeholder={t('phonePh')} value={phone} onChange={setPhone} autoComplete="tel" />
+                      </>
+                    )}
+
+                    <Field iconName="alternate_email" type="email" placeholder={t('emailPh')} value={email} onChange={setEmail} autoComplete="email" />
+
+                    <Field
+                      iconName="lock_open"
+                      type={showPass ? 'text' : 'password'}
+                      placeholder={t('passwordPh')}
+                      value={password}
+                      onChange={setPassword}
+                      autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                      rightSlot={
+                        <button type="button" onClick={() => setShowPass(v => !v)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.onSurfaceVar, display: 'flex', alignItems: 'center' }}>
+                          {showPass ? <EyeOff size={18} strokeWidth={1.8} /> : <Eye size={18} strokeWidth={1.8} />}
+                        </button>
+                      }
+                    />
+
+                    {mode === 'login' && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 8 }}>
+                        <button type="button" style={{ fontSize: 13, fontWeight: 600, color: C.primaryCont, background: 'none', border: 'none', cursor: 'pointer' }}>
+                          Forgot password?
+                        </button>
+                      </div>
+                    )}
+
+                    {error && (
+                      <p style={{ fontSize: 12, color: '#ba1a1a', textAlign: 'center' }}>{error}</p>
+                    )}
+
+                    {/* CTA button — gradient */}
+                    <motion.button
+                      type="submit"
+                      disabled={loading}
+                      whileTap={{ scale: 0.97 }}
+                      style={{
+                        width: '100%',
+                        padding: '16px 32px',
+                        background: loading ? C.primary : `linear-gradient(135deg, ${C.primary}, ${C.primaryCont})`,
+                        color: '#ffffff',
+                        borderRadius: 9999,
+                        border: 'none',
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        letterSpacing: '0.10em',
+                        textTransform: 'uppercase',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        boxShadow: `0 8px 24px rgba(0,74,198,0.30)`,
+                        opacity: loading ? 0.75 : 1,
+                        transition: 'box-shadow 0.2s, opacity 0.2s',
+                        marginTop: 4,
+                      }}
+                    >
+                      {loading
+                        ? <Loader2 size={18} className="animate-spin" />
+                        : <>{mode === 'login' ? t('loginBtn') : t('signupBtn')}<ArrowRight size={16} strokeWidth={2.5} /></>
+                      }
+                    </motion.button>
+
+                    {/* Divider */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0' }}>
+                      <div style={{ flex: 1, height: 1, background: `rgba(195,198,215,0.4)` }} />
+                      <span style={{ fontSize: 10, fontWeight: 700, color: `rgba(67,70,85,0.45)`, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                        Or continue with
+                      </span>
+                      <div style={{ flex: 1, height: 1, background: `rgba(195,198,215,0.4)` }} />
+                    </div>
+
+                    {/* Google */}
+                    <motion.button
+                      type="button"
+                      onClick={handleGoogle}
+                      disabled={googleLoading}
+                      whileTap={{ scale: 0.97 }}
+                      style={{
+                        width: '100%',
+                        padding: '14px 24px',
+                        background: C.surfaceLow,
+                        border: `1px solid rgba(195,198,215,0.25)`,
+                        borderRadius: 9999,
+                        color: C.onSurface,
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: googleLoading ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                        opacity: googleLoading ? 0.7 : 1,
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = C.surfaceHigh}
+                      onMouseLeave={e => e.currentTarget.style.background = C.surfaceLow}
+                    >
+                      {googleLoading
+                        ? <Loader2 size={18} className="animate-spin" />
+                        : <><GoogleIcon />{t('googleBtn')}</>
+                      }
+                    </motion.button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            {done ? (
-              <motion.div
-                key="done"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center py-6"
-              >
-                <CheckCircle2 size={40} className="mx-auto mb-3" strokeWidth={1.5}
-                              style={{ color: D.primary }} />
-                <p className="font-semibold text-sm" style={{ color: D.text }}>{t('checkEmail')}</p>
-                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: `rgba(196,198,205,0.65)` }}>
-                  {t('confirmSent')}<br />
-                  <span className="font-medium" style={{ color: D.text }}>{email}</span>
-                </p>
-                <button
-                  onClick={() => { setDone(false); switchMode('login') }}
-                  className="mt-5 text-xs font-medium underline underline-offset-2"
-                  style={{ color: D.primary }}
-                >
-                  {t('backToLogin')}
-                </button>
-              </motion.div>
-            ) : (
-              <motion.form
-                key={mode}
-                initial={{ opacity: 0, x: mode === 'login' ? -10 : 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.18 }}
-                onSubmit={handleSubmit}
-                className="space-y-3"
-              >
-                {mode === 'signup' && (
-                  <>
-                    <Field icon={User}  placeholder={t('firstNamePh')} value={firstName} onChange={setFirstName} autoComplete="given-name" />
-                    <Field icon={Phone} type="tel" placeholder={t('phonePh')} value={phone} onChange={setPhone} autoComplete="tel" />
-                  </>
-                )}
-                <Field icon={Mail} type="email"    placeholder={t('emailPh')}    value={email}    onChange={setEmail}    autoComplete="email" />
-                <Field icon={Lock} type="password" placeholder={t('passwordPh')} value={password} onChange={setPassword} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
-
-                {error && (
-                  <p className="text-xs text-center px-1" style={{ color: '#fca5a5' }}>{error}</p>
-                )}
-
-                {/* Primary CTA — solid primary */}
-                <motion.button
-                  type="submit"
-                  disabled={loading}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full flex items-center justify-center gap-2 py-3 mt-1 transition-opacity"
-                  style={{
-                    background: D.primary,
-                    color: D.onPrimary,
-                    borderRadius: '0.375rem',
-                    fontFamily: "'Manrope', system-ui, sans-serif",
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    opacity: loading ? 0.7 : 1,
-                  }}
-                >
-                  {loading
-                    ? <Loader2 size={16} className="animate-spin" />
-                    : <>{mode === 'login' ? t('loginBtn') : t('signupBtn')} <ArrowRight size={13} strokeWidth={2.5} /></>
-                  }
-                </motion.button>
-
-                {/* Divider */}
-                <div className="flex items-center gap-3 py-1">
-                  <div className="flex-1 h-px" style={{ background: `rgba(68,71,76,0.40)` }} />
-                  <span style={{ fontSize: '10px', fontWeight: 500, color: `rgba(142,145,151,0.70)`, letterSpacing: '0.10em' }}>
-                    {t('orSeparator')}
-                  </span>
-                  <div className="flex-1 h-px" style={{ background: `rgba(68,71,76,0.40)` }} />
-                </div>
-
-                {/* Google */}
-                <motion.button
-                  type="button"
-                  onClick={handleGoogle}
-                  disabled={googleLoading}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full flex items-center justify-center gap-2.5 py-3 transition-all"
-                  style={{
-                    background: 'transparent',
-                    border: `1px solid rgba(68,71,76,0.35)`,
-                    borderRadius: '0.375rem',
-                    color: `rgba(210,228,251,0.80)`,
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    opacity: googleLoading ? 0.7 : 1,
-                  }}
-                >
-                  {googleLoading
-                    ? <Loader2 size={16} className="animate-spin" />
-                    : <><GoogleIcon />{t('googleBtn')}</>
-                  }
-                </motion.button>
-              </motion.form>
-            )}
-          </AnimatePresence>
-
-          <p className="text-center mt-6" style={{
-            fontSize: '10px',
-            letterSpacing: '0.20em',
-            textTransform: 'uppercase',
-            color: `rgba(142,145,151,0.35)`,
-            fontFamily: "'Manrope', system-ui, sans-serif",
-          }}>
-            {t('authFooter')}
-          </p>
+          {/* Footer */}
+          <footer style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.05em' }}>
+              © 2025 Seatr. Amsterdam Study Spots.
+            </p>
+            <div style={{ display: 'flex', gap: 24 }}>
+              {['Support', 'Terms', 'Security'].map(lbl => (
+                <a key={lbl} href="#"
+                   style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textDecoration: 'none', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
+                  {lbl}
+                </a>
+              ))}
+            </div>
+          </footer>
         </motion.div>
       </div>
     </div>

@@ -78,19 +78,110 @@ function SettingsRow({ icon: Icon, label, value, danger, toggle, toggled, onClic
   )
 }
 
+/* ── Level thresholds ─────────────────────────────────────────── */
+const LEVELS = [
+  { level: 1, min: 0,    max: 499  },
+  { level: 2, min: 500,  max: 999  },
+  { level: 3, min: 1000, max: 1999 },
+  { level: 4, min: 2000, max: 3999 },
+  { level: 5, min: 4000, max: null },
+]
+function getLevelInfo(score) {
+  const current = LEVELS.findLast(l => score >= l.min) ?? LEVELS[0]
+  const next = LEVELS.find(l => l.level === current.level + 1)
+  const pct = next
+    ? Math.min(100, Math.round(((score - current.min) / (next.min - current.min)) * 100))
+    : 100
+  return { current, next, pct }
+}
+
+/* ── Progress bar ─────────────────────────────────────────────── */
+function ScoreProgressBar({ score }) {
+  const { current, next, pct } = getLevelInfo(score)
+  return (
+    <div className="mx-6 mb-5 px-5 py-4 rounded-2xl"
+         style={{
+           background: C.surfaceTop,
+           border: `1px solid rgba(155,173,215,0.12)`,
+           boxShadow: '0 4px 24px rgba(28,46,81,0.07)',
+         }}>
+      {/* Labels row */}
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          <p style={{
+            fontSize: '9px', fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.13em', color: C.muted,
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+          }}>Current Score</p>
+          <p style={{
+            fontSize: '20px', fontWeight: 800, letterSpacing: '-0.03em',
+            color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif",
+            lineHeight: 1.15, marginTop: 2,
+          }}>
+            {score.toLocaleString('fr-FR')}
+            <span style={{ fontSize: '12px', fontWeight: 600, color: C.muted, marginLeft: 4 }}>pts</span>
+          </p>
+        </div>
+        <div className="text-right">
+          <p style={{
+            fontSize: '9px', fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.13em', color: C.muted,
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+          }}>{next ? 'Next Level' : 'Max Level'}</p>
+          <p style={{
+            fontSize: '20px', fontWeight: 800, letterSpacing: '-0.03em',
+            color: next ? C.primary : C.secondary,
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            lineHeight: 1.15, marginTop: 2,
+          }}>
+            {next ? next.min.toLocaleString('fr-FR') : '🏆'}
+            {next && <span style={{ fontSize: '12px', fontWeight: 600, color: C.muted, marginLeft: 4 }}>pts</span>}
+          </p>
+        </div>
+      </div>
+      {/* Track */}
+      <div style={{
+        height: 7, borderRadius: 9999,
+        background: 'rgba(155,173,215,0.22)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%', borderRadius: 9999,
+          width: `${pct}%`,
+          background: `linear-gradient(90deg, ${C.primary}, #4fa4ff)`,
+          transition: 'width 0.9s cubic-bezier(0.34,1.56,0.64,1)',
+        }} />
+      </div>
+      {/* Level label */}
+      <div className="flex justify-between mt-2">
+        <span style={{ fontSize: '10px', fontWeight: 600, color: C.primary,
+          fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Level {current.level}
+        </span>
+        {next && (
+          <span style={{ fontSize: '10px', fontWeight: 600, color: C.outlineVar,
+            fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            {pct}% — Level {next.level}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ── Badge card — rounded-full icon ──────────────────────────── */
 function BadgeCard({ icon: Icon, label, unlocked, color }) {
   return (
-    <div className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-transform active:scale-95"
+    <div className="flex flex-col items-center gap-1.5 py-2.5 px-1.5 rounded-xl transition-transform active:scale-95"
          style={{ background: C.surfaceLow }}>
-      <div className="w-12 h-12 rounded-full flex items-center justify-center"
+      <div className="w-9 h-9 rounded-full flex items-center justify-center"
            style={{ background: unlocked ? `${color}18` : `rgba(155,173,215,0.15)` }}>
-        <Icon size={22} strokeWidth={1.6}
+        <Icon size={16} strokeWidth={1.6}
               style={{ color: unlocked ? color : C.outlineVar }} />
       </div>
       <span className="text-center leading-tight"
             style={{
-              fontSize: '10px', fontWeight: 700,
+              fontSize: '9px', fontWeight: 700,
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               color: unlocked ? C.muted : `rgba(155,173,215,0.65)`,
             }}>
@@ -313,6 +404,9 @@ export default function ProfileTab() {
             sub={rank != null ? `Top étudiant` : '—'}
           />
         </div>
+
+        {/* ══ Score progress bar ════════════════════════════════ */}
+        <ScoreProgressBar score={user.score} />
 
         {/* ══ Curated Badges ════════════════════════════════════ */}
         <section className="px-6 mb-6 space-y-3">

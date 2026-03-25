@@ -72,10 +72,12 @@ function SpotCard({ lib, onSelect, t }) {
       onMouseLeave={() => setHovered(false)}
       className="cursor-pointer transition-all duration-200"
       style={{
-        background: hovered ? '#ffffff' : '#ffffff',
+        background: '#ffffff',
         borderRadius: '1rem',
         padding: '1rem',
-        boxShadow: hovered ? '0 8px 24px rgba(0,93,164,0.08)' : 'none',
+        boxShadow: hovered
+          ? '0 6px 20px rgba(0,93,164,0.13)'
+          : '0 2px 8px rgba(28,46,81,0.07)',
       }}
     >
       <div className="flex gap-3.5">
@@ -290,7 +292,7 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
         className="absolute left-0 right-0 bottom-0"
         style={{
           height: SHEET_H,
-          background: '#ffffff',
+          background: '#eef2fb',
           boxShadow: '0 -8px 40px rgba(0,0,0,0.08)',
           zIndex: 500,
           borderRadius: '3rem 3rem 0 0',
@@ -307,9 +309,9 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
           else if (info.offset.y > 60 || info.velocity.y > 300) setIsOpen(false)
         }}
       >
-        {/* Sheet header — white, clean */}
+        {/* Sheet header — matches sheet bg */}
         <div style={{
-          background: '#ffffff',
+          background: '#eef2fb',
           borderRadius: '3rem 3rem 0 0',
           padding: '14px 24px 20px',
         }}>
@@ -352,6 +354,7 @@ export default function MapTab({ libraries, onSelect, showBanner }) {
             height: SHEET_H - 120,
             overflowY: isOpen ? 'auto' : 'hidden',
             scrollbarWidth: 'none',
+            background: '#eef2fb',
           }}
           onPointerDown={isOpen ? e => e.stopPropagation() : undefined}
         >

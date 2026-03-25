@@ -54,54 +54,96 @@ export default function BottomNav({ active, onChange }) {
   const { t } = useLanguage()
 
   return (
-    /* Academic bottom bar — glassmorphism, rounded top, no 1px border lines */
     <div
       className="absolute bottom-0 left-0 right-0 z-[1000]"
       style={{
-        background: 'rgba(245,246,255,0.88)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        borderTop: '1px solid rgba(155,173,215,0.20)',
-        borderRadius: '2rem 2rem 0 0',
-        boxShadow: '0 -8px 32px rgba(28,46,81,0.07)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        background: 'transparent',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+        paddingLeft: 24,
+        paddingRight: 24,
+        paddingTop: 10,
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'flex-end',
+        pointerEvents: 'none',
       }}
     >
-      <div className="flex items-center justify-around px-6 pt-3 pb-5">
-        {TABS.map(({ id, key, Icon }) => {
-          const isActive = active === id
-          return (
-            <motion.button
-              key={id}
-              onClick={() => onChange(id)}
-              whileTap={{ scale: 0.92 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 380 }}
-              className="flex flex-col items-center gap-1.5 relative px-5 py-2 rounded-full transition-colors"
+      {TABS.map(({ id, key, Icon }) => {
+        const isActive = active === id
+        return (
+          <motion.button
+            key={id}
+            onClick={() => onChange(id)}
+            whileTap={{ scale: 0.90 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 380 }}
+            style={{
+              pointerEvents: 'all',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 6,
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+            }}
+          >
+            {/* Floating circle */}
+            <motion.div
+              animate={{
+                width:  isActive ? 64 : 52,
+                height: isActive ? 64 : 52,
+                boxShadow: isActive
+                  ? '0 8px 24px rgba(0,93,164,0.18)'
+                  : '0 4px 14px rgba(28,46,81,0.10)',
+              }}
+              transition={{ type: 'spring', damping: 24, stiffness: 360 }}
               style={{
-                background: isActive ? 'rgba(0,93,164,0.08)' : 'transparent',
-                minWidth: 72,
+                borderRadius: '50%',
+                background: isActive ? 'rgba(245,246,255,0.97)' : 'rgba(245,246,255,0.90)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: isActive
+                  ? '1.5px solid rgba(0,93,164,0.15)'
+                  : '1.5px solid rgba(155,173,215,0.25)',
               }}
             >
               <Icon active={isActive} />
-              <span
-                className="text-[10px] font-semibold tracking-wide leading-none"
-                style={{ color: isActive ? '#005da4' : '#65779d' }}
-              >
-                {t(key)}
-              </span>
-              {/* Active indicator dot */}
-              {isActive && (
-                <motion.div
-                  layoutId="nav-indicator"
-                  className="absolute -bottom-0 left-1/2 w-1 h-1 rounded-full -translate-x-1/2"
-                  style={{ background: '#005da4' }}
-                  transition={{ type: 'spring', damping: 28, stiffness: 400 }}
-                />
-              )}
-            </motion.button>
-          )
-        })}
-      </div>
+            </motion.div>
+
+            {/* Label */}
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                letterSpacing: '0.02em',
+                color: isActive ? '#005da4' : '#65779d',
+                lineHeight: 1,
+              }}
+            >
+              {t(key)}
+            </span>
+
+            {/* Active dot */}
+            {isActive && (
+              <motion.div
+                layoutId="nav-dot"
+                style={{
+                  width: 4, height: 4,
+                  borderRadius: '50%',
+                  background: '#005da4',
+                  marginTop: -2,
+                }}
+                transition={{ type: 'spring', damping: 28, stiffness: 400 }}
+              />
+            )}
+          </motion.button>
+        )
+      })}
     </div>
   )
 }

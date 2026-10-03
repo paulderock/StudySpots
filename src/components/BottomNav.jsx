@@ -57,7 +57,10 @@ export default function BottomNav({ active, onChange }) {
     <div
       className="absolute bottom-0 left-0 right-0 z-[1000]"
       style={{
-        background: 'transparent',
+        // Fade list content out behind the floating circles (map stays see-through)
+        background: active === 'map'
+          ? 'transparent'
+          : 'linear-gradient(to top, #f5f6ff 60%, rgba(245,246,255,0))',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
         paddingLeft: 24,
         paddingRight: 24,

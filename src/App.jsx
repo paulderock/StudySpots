@@ -515,8 +515,9 @@ function LibrarySheet({ lib, onClose, onReport, isFullScreen }) {
                   </p>
                   <PersonPips score={occMeta.score} color={occMeta.color} />
                 </div>
-                <p className="text-sm font-semibold" style={{ color: D.secondary }}>
-                  {occ < 40 ? t('occupancyVeryCalm') : occ < 60 ? t('occupancyCalm') : occ < 80 ? t('occupancyBusy') : t('occupancyVeryBusy')}
+                {/* Same scale as the badge and pips above, so the two never disagree */}
+                <p className="text-sm font-semibold" style={{ color: occMeta.textColor }}>
+                  {occMeta.score}/5
                 </p>
               </div>
             </div>

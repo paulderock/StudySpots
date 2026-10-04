@@ -74,7 +74,7 @@ flowchart LR
 | <img src="docs/screenshots/04-report.jpg" width="240" /> | <img src="docs/screenshots/05-map.jpg" width="240" /> | <img src="docs/screenshots/06-profile.jpg" width="240" /> |
 | Rate the crowd from 1 (empty) to 5 (full) | Every spot in the city at a glance | Score, level progress and badges |
 
-<sub>The screenshots were taken in demo mode, with sample spots and a sample user. The live app loads real spots, photos and opening hours from Airtable.</sub>
+<sub>All screenshots come from the running app: real spots, photos and opening hours from the Airtable database, and a real logged-in account on the profile screen.</sub>
 
 ---
 
